@@ -1,5 +1,5 @@
 // German income tax, 2024, married/jointly. Pure functions — no DOM, no side effects.
-// Math is identical to legacy/index.html; only types are added.
+// Verified against the official 2024 tariff tables in tax.test.ts.
 
 export type TaxClass = 'III' | 'IV' | 'V'
 
