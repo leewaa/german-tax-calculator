@@ -1,9 +1,14 @@
 <script lang="ts">
-  import { calculate, type TaxClass, type HouseholdInput, type PersonResult } from './tax'
+  import {
+    calculate, TAX_YEARS,
+    type TaxClass, type TaxYear, type HouseholdInput, type PersonResult,
+  } from './tax'
   import { getConsent, setConsent, saveForm, loadForm, clearForm, type Consent } from './storage'
 
   // If the user previously accepted, rehydrate the saved form; otherwise use dummy defaults.
   const savedForm = (typeof document !== 'undefined' && getConsent() === 'accepted') ? loadForm() : null
+
+  let year = $state<TaxYear>(savedForm?.year ?? 2024)
 
   // Defaults are ROUND DUMMY NUMBERS — never real personal figures.
   let grossYou = $state(savedForm?.grossYou ?? 70000)
@@ -19,7 +24,7 @@
   let denkmalCost = $state(savedForm?.denkmalCost ?? 0)
 
   const input = $derived<HouseholdInput>({
-    grossYou, classYou, grossWife, classWife, ausRent,
+    year, grossYou, classYou, grossWife, classWife, ausRent,
     zusatzPct, kids, interest, freelance, deductions, denkmalCost,
   })
 
@@ -89,13 +94,23 @@
 </script>
 
 <div class="wrap">
-  <span class="tag">◆ Tax year 2024 · Married / jointly</span>
+  <span class="tag">◆ Tax year {year} · Married / jointly</span>
   <h1>German Tax Calculator</h1>
   <p class="lede">Two incomes, your tax classes, and the Australian rent that lifts your German rate
     via <em>Progressionsvorbehalt</em> — shown as the annual bill, the monthly withholding, and the year-end balance.</p>
 
   <!-- ============ INPUTS ============ -->
   <div class="sec-title"><span class="n">1</span> Your household</div>
+  <div class="grid" style="margin-bottom:16px">
+    <div class="card">
+      <div class="field year-field">
+        <label for="year">Tax year</label>
+        <select id="year" bind:value={year}>
+          {#each TAX_YEARS as y}<option value={y}>{y}</option>{/each}
+        </select>
+      </div>
+    </div>
+  </div>
   {#if !comboValid}
     <div class="warn-box">⚠ A married couple can only run III + V (or V + III) or IV + IV. The annual bill is still correct, but the monthly withholding for this combo isn't a real-world option.</div>
   {/if}
@@ -283,7 +298,7 @@
 
   <p class="assumptions">
     <b>Approximate — for orientation only, not tax advice or a Lohnabrechnung.</b>
-    Tax year 2024, married filing jointly, <b>statutory health insurance</b> (Zusatzbeitrag and
+    Tax year {year}, married filing jointly, <b>statutory health insurance</b> (Zusatzbeitrag and
     number of children are your inputs above), <b>no church tax</b>. Children lower your
     Pflegeversicherung rate and your Soli base, but — as in the real withholding system — they
     do <b>not</b> reduce your Lohnsteuer or income tax (no Kindergeld/Kinderfreibetrag
@@ -371,6 +386,15 @@
   .classes button{flex:1; background:var(--panel2); border:1px solid var(--border); color:var(--muted);
     border-radius:10px; padding:11px 0; font-size:15px; font-weight:600; cursor:pointer; transition:.12s}
   .classes button.on{background:rgba(124,107,255,.18); border-color:var(--accent); color:#fff}
+  .year-field{max-width:220px}
+  select{width:100%; background:var(--panel2); border:1px solid var(--border); border-radius:12px;
+    color:var(--ink); font-size:20px; font-variant-numeric:tabular-nums; padding:13px 14px;
+    outline:none; cursor:pointer; transition:border-color .15s, box-shadow .15s;
+    appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa0b4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center}
+  select:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,107,255,.18)}
+  select option{background:#11131b; color:var(--ink)}
   .warn-box{background:rgba(251,191,36,.10); border:1px solid rgba(251,191,36,.35); color:#fde68a;
     border-radius:12px; padding:12px 16px; font-size:14px; margin:0 0 16px}
 

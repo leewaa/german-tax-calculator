@@ -10,6 +10,7 @@ const clearAllCookies = () =>
   })
 
 const FORM: HouseholdInput = {
+  year: 2025,
   grossYou: 88000, classYou: 'IV', grossWife: 42000, classWife: 'IV',
   ausRent: 9000, zusatzPct: 1.3, kids: 2, interest: 5000,
   freelance: 15000, deductions: 2500, denkmalCost: 120000,
