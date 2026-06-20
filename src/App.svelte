@@ -1,23 +1,44 @@
 <script lang="ts">
   import { calculate, type TaxClass, type HouseholdInput, type PersonResult } from './tax'
+  import { getConsent, setConsent, saveForm, loadForm, clearForm, type Consent } from './storage'
+
+  // If the user previously accepted, rehydrate the saved form; otherwise use dummy defaults.
+  const savedForm = (typeof document !== 'undefined' && getConsent() === 'accepted') ? loadForm() : null
 
   // Defaults are ROUND DUMMY NUMBERS — never real personal figures.
-  let grossYou = $state(70000)
-  let classYou = $state<TaxClass>('III')
-  let grossWife = $state(35000)
-  let classWife = $state<TaxClass>('V')
-  let ausRent = $state(12000)
-  let freelance = $state(0)
-  let zusatzPct = $state(1.7)
-  let kids = $state(0)
-  let interest = $state(3000)
-  let deductions = $state(0)
-  let denkmalCost = $state(0)
+  let grossYou = $state(savedForm?.grossYou ?? 70000)
+  let classYou = $state<TaxClass>(savedForm?.classYou ?? 'III')
+  let grossWife = $state(savedForm?.grossWife ?? 35000)
+  let classWife = $state<TaxClass>(savedForm?.classWife ?? 'V')
+  let ausRent = $state(savedForm?.ausRent ?? 12000)
+  let freelance = $state(savedForm?.freelance ?? 0)
+  let zusatzPct = $state(savedForm?.zusatzPct ?? 1.7)
+  let kids = $state(savedForm?.kids ?? 0)
+  let interest = $state(savedForm?.interest ?? 3000)
+  let deductions = $state(savedForm?.deductions ?? 0)
+  let denkmalCost = $state(savedForm?.denkmalCost ?? 0)
 
   const input = $derived<HouseholdInput>({
     grossYou, classYou, grossWife, classWife, ausRent,
     zusatzPct, kids, interest, freelance, deductions, denkmalCost,
   })
+
+  // Cookie consent: banner shows only until a choice is made.
+  let consent = $state<Consent>(typeof document !== 'undefined' ? getConsent() : null)
+  // Persist on every change, but only once the user has accepted.
+  $effect(() => {
+    if (consent === 'accepted') saveForm(input)
+  })
+  function acceptCookies() {
+    setConsent('accepted')
+    saveForm(input)
+    consent = 'accepted'
+  }
+  function declineCookies() {
+    setConsent('declined')
+    clearForm()
+    consent = 'declined'
+  }
   const r = $derived(calculate(input))
   const baseline = $derived(calculate({ ...input, deductions: 0, denkmalCost: 0 }))
   const saved = $derived(Math.max(0, baseline.annualTotal - r.annualTotal))
@@ -285,6 +306,20 @@
   </p>
 </div>
 
+{#if consent === null}
+  <div class="cookie-bar" role="dialog" aria-label="Cookie consent">
+    <div class="cookie-text">
+      <b>Keep your numbers?</b> This site can store your form entries in a single first-party cookie
+      so you don't have to re-type them next time. <b>Functional only</b> — no tracking, no analytics,
+      nothing leaves your browser.
+    </div>
+    <div class="cookie-actions">
+      <button class="ghost" onclick={declineCookies}>Decline</button>
+      <button class="primary" onclick={acceptCookies}>Accept</button>
+    </div>
+  </div>
+{/if}
+
 <style>
   :global(:root){
     --bg:#0a0b10; --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.02);
@@ -394,4 +429,19 @@
   .assumptions{color:var(--muted); font-size:13px; line-height:1.65; border-top:1px solid var(--border);
     padding-top:18px; margin-top:30px}
   .assumptions b{color:var(--ink); font-weight:600}
+
+  /* cookie consent */
+  .cookie-bar{position:fixed; left:16px; right:16px; bottom:16px; margin:0 auto; max-width:760px;
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap; justify-content:space-between;
+    background:rgba(16,18,27,.92); border:1px solid var(--border); border-radius:16px;
+    padding:16px 20px; backdrop-filter:blur(12px); box-shadow:0 12px 40px rgba(0,0,0,.45); z-index:50}
+  .cookie-text{flex:1; min-width:240px; font-size:13px; line-height:1.55; color:var(--muted)}
+  .cookie-text b{color:var(--ink); font-weight:600}
+  .cookie-actions{display:flex; gap:10px}
+  .cookie-actions button{border-radius:10px; padding:10px 18px; font-size:14px; font-weight:600;
+    cursor:pointer; border:1px solid var(--border); transition:.12s}
+  .cookie-actions .ghost{background:transparent; color:var(--muted)}
+  .cookie-actions .ghost:hover{color:var(--ink)}
+  .cookie-actions .primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .cookie-actions .primary:hover{filter:brightness(1.08)}
 </style>
