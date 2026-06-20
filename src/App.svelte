@@ -192,6 +192,7 @@
   <!-- ============ MONTHLY ============ -->
   <div class="sec-title"><span class="n">3</span> Monthly withholding — where the tax classes bite</div>
   <div class="card" style="padding:8px 8px 0">
+    <div class="table-scroll">
     <table>
       <thead><tr><th>Per month</th><th>You <span class="cls-pill">{classYou}</span></th><th>Wife <span class="cls-pill">{classWife}</span></th><th>Together</th></tr></thead>
       <tbody>
@@ -201,6 +202,7 @@
         <tr class="net"><td>Net in pocket</td><td>{eur(m(r.p1, 'netA'))}</td><td>{eur(m(r.p2, 'netA'))}</td><td>{eur(m(r.p1, 'netA') + m(r.p2, 'netA'))}</td></tr>
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- ============ RECONCILIATION ============ -->
@@ -225,6 +227,7 @@
       <label>Australian bank interest received (gross, in €)</label>
       <div class="input"><span>€</span><input type="number" inputmode="numeric" min="0" step="500" bind:value={interest}></div>
     </div>
+    <div class="table-scroll">
     <table>
       <tbody>
         <tr><td>Gross interest</td><td>{eur(r.cap.interest)}</td></tr>
@@ -236,6 +239,7 @@
         <tr class="net"><td>German tax due on the interest</td><td>{eur(r.cap.germanDue)}</td></tr>
       </tbody>
     </table>
+    </div>
     {#if iNote}<p class="recon-note">{iNote}</p>{/if}
   </div>
 
@@ -267,6 +271,7 @@
       <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:12px">
         Tax-class comparison — same total tax, only the cash-flow timing differs
       </div>
+      <div class="table-scroll">
       <table>
         <thead><tr><th>Combo</th><th>Combined net / month</th><th>Year-end balance</th></tr></thead>
         <tbody>
@@ -280,6 +285,7 @@
           {/each}
         </tbody>
       </table>
+      </div>
       <p class="recon-note">{comboNote}</p>
     </div>
   </div>
@@ -416,8 +422,9 @@
   .stat.cost .v{color:var(--warn)}
 
   /* monthly table */
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
   table{width:100%; border-collapse:collapse; font-size:15px}
-  th,td{padding:12px 14px; text-align:right; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums}
+  th,td{padding:12px 14px; text-align:right; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; white-space:nowrap}
   th{color:var(--muted); font-weight:600; font-size:12px; letter-spacing:.04em; text-transform:uppercase}
   td:first-child,th:first-child{text-align:left}
   tr.net td{font-weight:600; border-bottom:none}
@@ -468,4 +475,38 @@
   .cookie-actions .ghost:hover{color:var(--ink)}
   .cookie-actions .primary{background:var(--accent); border-color:var(--accent); color:#fff}
   .cookie-actions .primary:hover{filter:brightness(1.08)}
+
+  /* ---------- phones ---------- */
+  @media(max-width:560px){
+    :global(body){padding:24px 14px 100px}
+    h1{font-size:25px}
+    .lede{font-size:15px}
+    .sec-title{margin:26px 0 12px}
+    .card{padding:18px 16px}
+
+    /* headline + grand-total blocks stack instead of overflowing */
+    .total{flex-direction:column; align-items:stretch; gap:14px; padding:18px}
+    .total .big{font-size:32px}
+    .total .rates{width:100%; justify-content:space-between; text-align:left; gap:16px}
+    .total .rates b{font-size:19px}
+
+    /* tighter, smaller tables (they also scroll if still too wide) */
+    th,td{padding:9px 10px; font-size:13px}
+    .stat .v{font-size:19px}
+
+    /* reconciliation: stack the two legs over the balance */
+    .recon{flex-direction:column; align-items:stretch; gap:14px}
+    .recon .arrow{display:none}
+    .balance{min-width:0; text-align:left}
+
+    /* fine-tuner: slider above a full-width number box */
+    .tuner-row{flex-direction:column; align-items:stretch}
+    .tuner-row .input{width:100% !important}
+    input[type=range]{width:100%}
+
+    /* cookie bar hugs the screen edges with full-width buttons */
+    .cookie-bar{left:8px; right:8px; bottom:8px; padding:14px 16px}
+    .cookie-actions{width:100%}
+    .cookie-actions button{flex:1}
+  }
 </style>
