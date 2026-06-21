@@ -132,422 +132,486 @@
     > — from the annual tax you owe to the net income you actually take home.
   </p>
 
-  <!-- ============ INPUTS · household ============ -->
-  <div class="sec-title"><span class="n">1</span> Your household</div>
-  <div class="grid" style="margin-bottom:16px">
-    <div class="card">
-      <div class="field year-field">
-        <label for="year">Tax year</label>
-        <select id="year" bind:value={year}>
-          {#each TAX_YEARS as y (y)}<option value={y}>{y}</option>{/each}
-        </select>
-      </div>
-    </div>
-  </div>
-  {#if !comboValid}
-    <div class="warn-box">
-      ⚠ A married couple can only run III + V (or V + III) or IV + IV. The annual bill is still correct, but
-      the monthly withholding for this combo isn't a real-world option.
-    </div>
-  {/if}
-  <div class="grid cols2">
-    <div class="card">
-      <h3>You</h3>
-      <div class="field">
-        <label>Gross annual salary</label>
-        <div class="input">
-          <span>€</span><input type="number" inputmode="numeric" min="0" step="1000" bind:value={grossYou} />
-        </div>
-      </div>
-      <div class="field">
-        <label>Tax class (Steuerklasse)</label>
-        <div class="classes">
-          <button class:on={classYou === 'III'} onclick={() => (classYou = 'III')}>III</button><button
-            class:on={classYou === 'IV'}
-            onclick={() => (classYou = 'IV')}>IV</button
-          ><button class:on={classYou === 'V'} onclick={() => (classYou = 'V')}>V</button>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Your wife</h3>
-      <div class="field">
-        <label>Gross annual salary</label>
-        <div class="input">
-          <span>€</span><input type="number" inputmode="numeric" min="0" step="1000" bind:value={grossWife} />
-        </div>
-      </div>
-      <div class="field">
-        <label>Tax class (Steuerklasse)</label>
-        <div class="classes">
-          <button class:on={classWife === 'III'} onclick={() => (classWife = 'III')}>III</button><button
-            class:on={classWife === 'IV'}
-            onclick={() => (classWife = 'IV')}>IV</button
-          ><button class:on={classWife === 'V'} onclick={() => (classWife = 'V')}>V</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ INPUTS · health & family ============ -->
-  <div class="sec-title"><span class="n">2</span> Health insurance &amp; family</div>
-  <div class="grid">
-    <div class="card">
-      <div class="row3">
-        <div class="field">
-          <label>Health insurance</label>
-          <div class="static-field">Statutory (gesetzlich)</div>
-        </div>
-        <div class="field">
-          <label>Krankenkasse Zusatzbeitrag</label>
-          <div class="input">
-            <span style="left:auto;right:14px">%</span><input
-              type="number"
-              inputmode="decimal"
-              min="0"
-              max="5"
-              step="0.1"
-              bind:value={zusatzPct}
-              style="padding-left:14px"
-            />
-          </div>
-        </div>
-        <div class="field">
-          <label>Children (under 25)</label>
-          <div class="input">
-            <input
-              type="number"
-              inputmode="numeric"
-              min="0"
-              max="10"
-              step="1"
-              bind:value={kids}
-              style="padding-left:14px"
-            />
+  <div class="panes">
+    <div class="rail">
+      <!-- ============ INPUTS · household ============ -->
+      <div class="sec-title"><span class="n">1</span> Your household</div>
+      <div class="grid" style="margin-bottom:16px">
+        <div class="card">
+          <div class="field year-field">
+            <label for="year">Tax year</label>
+            <select id="year" bind:value={year}>
+              {#each TAX_YEARS as y (y)}<option value={y}>{y}</option>{/each}
+            </select>
           </div>
         </div>
       </div>
-      <p class="field-note">
-        You both pay statutory <b>health insurance</b> (7.3% + half your Zusatzbeitrag) and
-        <b>care insurance</b>, each capped at the {year} contribution ceiling. Children lower the care-insurance
-        rate. These feed directly into your net income below.
-      </p>
-    </div>
-  </div>
-
-  <!-- ============ INPUTS · other income ============ -->
-  <div class="sec-title"><span class="n">3</span> Other income</div>
-  <div class="grid">
-    <div class="card">
-      <div class="row2">
-        <div class="field">
-          <label>Australian net rental income (€) — exempt, progression-relevant</label>
-          <div class="input">
-            <span>€</span><input type="number" inputmode="numeric" min="0" step="500" bind:value={ausRent} />
+      {#if !comboValid}
+        <div class="warn-box">
+          ⚠ A married couple can only run III + V (or V + III) or IV + IV. The annual bill is still correct,
+          but the monthly withholding for this combo isn't a real-world option.
+        </div>
+      {/if}
+      <div class="grid cols2">
+        <div class="card">
+          <h3>You</h3>
+          <div class="field">
+            <label>Gross annual salary</label>
+            <div class="input">
+              <span>€</span><input
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1000"
+                bind:value={grossYou}
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label>Tax class (Steuerklasse)</label>
+            <div class="classes">
+              <button class:on={classYou === 'III'} onclick={() => (classYou = 'III')}>III</button><button
+                class:on={classYou === 'IV'}
+                onclick={() => (classYou = 'IV')}>IV</button
+              ><button class:on={classYou === 'V'} onclick={() => (classYou = 'V')}>V</button>
+            </div>
           </div>
         </div>
-        <div class="field">
-          <label>Your freelance income (freiberuflich, taxable profit €)</label>
-          <div class="input">
-            <span>€</span><input
-              type="number"
-              inputmode="numeric"
-              min="0"
-              step="1000"
-              bind:value={freelance}
-            />
+        <div class="card">
+          <h3>Your wife</h3>
+          <div class="field">
+            <label>Gross annual salary</label>
+            <div class="input">
+              <span>€</span><input
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1000"
+                bind:value={grossWife}
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label>Tax class (Steuerklasse)</label>
+            <div class="classes">
+              <button class:on={classWife === 'III'} onclick={() => (classWife = 'III')}>III</button><button
+                class:on={classWife === 'IV'}
+                onclick={() => (classWife = 'IV')}>IV</button
+              ><button class:on={classWife === 'V'} onclick={() => (classWife = 'V')}>V</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ INPUTS · health & family ============ -->
+      <div class="sec-title"><span class="n">2</span> Health insurance &amp; family</div>
+      <div class="grid">
+        <div class="card">
+          <div class="row3">
+            <div class="field">
+              <label>Health insurance</label>
+              <div class="static-field">Statutory (gesetzlich)</div>
+            </div>
+            <div class="field">
+              <label>Krankenkasse Zusatzbeitrag</label>
+              <div class="input">
+                <span style="left:auto;right:14px">%</span><input
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  bind:value={zusatzPct}
+                  style="padding-left:14px"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label>Children (under 25)</label>
+              <div class="input">
+                <input
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  max="10"
+                  step="1"
+                  bind:value={kids}
+                  style="padding-left:14px"
+                />
+              </div>
+            </div>
+          </div>
+          <p class="field-note">
+            You both pay statutory <b>health insurance</b> (7.3% + half your Zusatzbeitrag) and
+            <b>care insurance</b>, each capped at the {year} contribution ceiling. Children lower the care-insurance
+            rate. These feed directly into your net income below.
+          </p>
+        </div>
+      </div>
+
+      <!-- ============ INPUTS · other income ============ -->
+      <div class="sec-title"><span class="n">3</span> Other income</div>
+      <div class="grid">
+        <div class="card">
+          <div class="row2">
+            <div class="field">
+              <label>Australian net rental income (€) — exempt, progression-relevant</label>
+              <div class="input">
+                <span>€</span><input
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  step="500"
+                  bind:value={ausRent}
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label>Your freelance income (freiberuflich, taxable profit €)</label>
+              <div class="input">
+                <span>€</span><input
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  step="1000"
+                  bind:value={freelance}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+    <!-- /.rail -->
 
-  <!-- ============ CAPITAL INCOME ============ -->
-  <div class="sec-title">
-    <span class="n">4</span> Australian bank interest — capital income (taxed separately, flat 25%)
-  </div>
-  <div class="card">
-    <div class="field" style="max-width:380px; margin-bottom:20px">
-      <label>Australian bank interest received (gross, in €)</label>
-      <div class="input">
-        <span>€</span><input type="number" inputmode="numeric" min="0" step="500" bind:value={interest} />
-      </div>
-    </div>
-    <div class="table-scroll">
-      <table>
-        <tbody>
-          <tr><td>Gross interest</td><td>{eur(r.cap.interest)}</td></tr>
-          <tr><td>− Sparer-Pauschbetrag (married)</td><td>− {eur(Math.min(r.cap.interest, 2000))}</td></tr>
-          <tr><td>= Taxable in Germany</td><td>{eur(r.cap.taxable)}</td></tr>
-          <tr><td>Abgeltungsteuer (25%)</td><td>{eur(r.cap.abgGross)}</td></tr>
-          <tr><td>− Australian tax credited (10%)</td><td>− {eur(r.cap.auCredit)}</td></tr>
-          <tr><td>+ Soli (5.5%)</td><td>+ {eur(r.cap.soliInt)}</td></tr>
-          <tr class="net"><td>German tax due on the interest</td><td>{eur(r.cap.germanDue)}</td></tr>
-        </tbody>
-      </table>
-    </div>
-    {#if iNote}<p class="recon-note">{iNote}</p>{/if}
-  </div>
-
-  <!-- ============ ANNUAL INCOME TAX ============ -->
-  <div class="sec-title">
-    <span class="n">5</span> Annual income tax — the truth (tax classes don't change this)
-  </div>
-  <div class="total">
-    <div>
-      <div class="lbl">Total tax owed in Germany</div>
-      <div class="big">{eur(r.annualTotal)}</div>
-      <div class="lbl" style="margin-top:8px">
-        Income tax <b style="color:var(--ink)">{eur(r.incomeTax)}</b> · Soli
-        <b style="color:var(--ink)">{eur(r.annualSoli)}</b>
-      </div>
-    </div>
-    <div class="rates">
-      <div>
-        <div class="lbl">Effective rate</div>
-        <b>{pct(r.effective)}</b>
-      </div>
-      <div>
-        <div class="lbl">Marginal rate</div>
-        <b>{pct(r.marginal)}</b>
-      </div>
-    </div>
-  </div>
-  <div class="stats">
-    <div class="stat">
-      <div class="k">Combined taxable income (est. zvE)</div>
-      <div class="v">{eur(r.zvE)}</div>
-    </div>
-    <div class="stat">
-      <div class="k">Tax if the rent weren't counted</div>
-      <div class="v">{eur(r.taxNoRent)}</div>
-    </div>
-    <div class="stat cost">
-      <div class="k">Cost of the Australian rent (progression)</div>
-      <div class="v">+ {eur(r.costOfRent)}</div>
-    </div>
-    <div class="stat">
-      <div class="k">Special rate applied (bes. Steuersatz)</div>
-      <div class="v">{pct(r.specialRate)}</div>
-    </div>
-  </div>
-
-  <!-- ============ GRAND TOTAL ============ -->
-  <div class="sec-title"><span class="n">6</span> Total German tax</div>
-  <div class="total">
-    <div>
-      <div class="lbl">Salary + rent progression + interest</div>
-      <div class="big">{eur(r.grandTotal)}</div>
-    </div>
-    <div class="rates">
-      <div>
-        <div class="lbl">Annual income tax</div>
-        <b style="color:var(--ink)">{eur(r.annualTotal)}</b>
-      </div>
-      <div>
-        <div class="lbl">On interest</div>
-        <b style="color:var(--ink)">{eur(r.cap.germanDue)}</b>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ NET INCOME ============ -->
-  <div class="sec-title"><span class="n">7</span> Monthly take-home &amp; net income</div>
-  <div class="total net-banner">
-    <div>
-      <div class="lbl">Combined net income / month</div>
-      <div class="big">{eur(monthlyNet)}</div>
-    </div>
-    <div class="rates">
-      <div>
-        <div class="lbl">Per year (take-home)</div>
-        <b>{eur(annualNet)}</b>
-      </div>
-      <div>
-        <div class="lbl">Health + care insurance / yr</div>
-        <b>{eur(annualHealth)}</b>
-      </div>
-    </div>
-  </div>
-  <div class="card" style="padding:8px 8px 0; margin-top:16px">
-    <div class="table-scroll">
-      <table>
-        <thead
-          ><tr
-            ><th>Per month</th><th>You <span class="cls-pill">{classYou}</span></th><th
-              >Wife <span class="cls-pill">{classWife}</span></th
-            ><th>Together</th></tr
-          ></thead
-        >
-        <tbody>
-          <tr
-            ><td>Gross</td><td>{eur(m(r.p1, 'g'))}</td><td>{eur(m(r.p2, 'g'))}</td><td
-              >{eur(m(r.p1, 'g') + m(r.p2, 'g'))}</td
-            ></tr
-          >
-          <tr
-            ><td>− Pension &amp; unemployment</td><td>− {eur(m(r.p1, 'rvAlv'))}</td><td
-              >− {eur(m(r.p2, 'rvAlv'))}</td
-            ><td>− {eur(m(r.p1, 'rvAlv') + m(r.p2, 'rvAlv'))}</td></tr
-          >
-          <tr
-            ><td>− Health insurance (KV)</td><td>− {eur(m(r.p1, 'kv'))}</td><td>− {eur(m(r.p2, 'kv'))}</td><td
-              >− {eur(m(r.p1, 'kv') + m(r.p2, 'kv'))}</td
-            ></tr
-          >
-          <tr
-            ><td>− Care insurance (PV)</td><td>− {eur(m(r.p1, 'pv'))}</td><td>− {eur(m(r.p2, 'pv'))}</td><td
-              >− {eur(m(r.p1, 'pv') + m(r.p2, 'pv'))}</td
-            ></tr
-          >
-          <tr
-            ><td>− Income tax (+ Soli)</td><td>− {eur(m(r.p1, 'withheld'))}</td><td
-              >− {eur(m(r.p2, 'withheld'))}</td
-            ><td>− {eur(m(r.p1, 'withheld') + m(r.p2, 'withheld'))}</td></tr
-          >
-          <tr class="net"
-            ><td>Net in pocket</td><td>{eur(m(r.p1, 'netA'))}</td><td>{eur(m(r.p2, 'netA'))}</td><td
-              >{eur(m(r.p1, 'netA') + m(r.p2, 'netA'))}</td
-            ></tr
-          >
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ============ RECONCILIATION ============ -->
-  <div class="sec-title"><span class="n">8</span> Year-end reconciliation</div>
-  <div class="card">
-    <div class="recon">
-      <div class="leg">
-        <div class="lbl">Withheld over the year</div>
-        <div class="v">{eur(r.withheld)}</div>
-      </div>
-      <div class="arrow">vs</div>
-      <div class="leg">
-        <div class="lbl">True annual liability</div>
-        <div class="v">{eur(r.annualTotal)}</div>
-      </div>
-      <div class="balance {r.balance >= 0 ? 'refund' : 'owe'}">
-        <div class="lbl">{r.balance >= 0 ? 'Expected refund' : 'Expected back-payment'}</div>
-        <div class="v">{r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(-r.balance)}</div>
-      </div>
-    </div>
-    <p class="recon-note">{rNote}</p>
-  </div>
-
-  <!-- ============ FINE-TUNER ============ -->
-  <div class="sec-title"><span class="n">9</span> Fine-tuner — nudge the levers you control</div>
-  <div class="card">
-    <div class="field">
-      <label
-        >Additional deductions (€/yr) — extra Werbungskosten, Sonderausgaben, deductible pension or freelance
-        expenses</label
-      >
-      <div class="tuner-row">
-        <input type="range" min="0" max="30000" step="250" bind:value={deductions} />
-        <div class="input" style="width:160px">
-          <span>€</span><input type="number" min="0" max="200000" step="250" bind:value={deductions} />
+    <div class="results">
+      <div class="hero">
+        <div class="hero-tile">
+          <div class="lbl">Total German tax</div>
+          <div class="big">{eur(r.grandTotal)}</div>
+          <div class="sub">Income tax {eur(r.annualTotal)} · Interest {eur(r.cap.germanDue)}</div>
+        </div>
+        <div class="hero-tile">
+          <div class="lbl">Net income / month</div>
+          <div class="big">{eur(monthlyNet)}</div>
+          <div class="sub">{eur(annualNet)} / yr take-home</div>
+        </div>
+        <div class="hero-tile {r.balance >= 0 ? 'refund' : 'owe'}">
+          <div class="lbl">Year-end balance</div>
+          <div class="big">{r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(-r.balance)}</div>
+          <div class="sub">{r.balance >= 0 ? 'expected refund' : 'expected back-payment'}</div>
         </div>
       </div>
-    </div>
-    <div class="stats" style="margin-top:6px">
-      <div class="stat">
-        <div class="k">Taxable income after deductions</div>
-        <div class="v">{eur(r.zvE)}</div>
-      </div>
-      <div class="stat">
-        <div class="k">Income tax saved (deductions)</div>
-        <div class="v" style="color:var(--good)">
-          {deductionsSaved > 0 ? '− ' + eur(deductionsSaved) : eur(0)}
-        </div>
-      </div>
-      <div class="stat">
-        <div class="k">New total German tax</div>
-        <div class="v">{eur(r.grandTotal)}</div>
-      </div>
-      <div class="stat">
-        <div class="k">Year-end balance now</div>
-        <div class="v" style="color:{r.balance >= 0 ? 'var(--good)' : 'var(--bad)'}">
-          {r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(Math.abs(r.balance))}
-        </div>
-      </div>
-    </div>
 
-    <div style="margin-top:24px">
-      <div
-        style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:12px"
-      >
-        Tax-class comparison — same total tax, only the cash-flow timing differs
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>Combo</th><th>Combined net / month</th><th>Year-end balance</th></tr></thead>
-          <tbody>
-            {#each rows as row (row.a + '+' + row.b)}
-              {@const cur = row.a === classYou && row.b === classWife}
-              <tr class:cur>
-                <td>{row.a} + {row.b}{cur ? ' · current' : ''}</td>
-                <td
-                  >{eur(row.net)}{#if row.net === bestNet}<span class="recommend"> ▲ most cash</span>{/if}</td
+      <div class="dash">
+        <div class="dash-cell">
+          <!-- ============ CAPITAL INCOME ============ -->
+          <div class="sec-title">
+            <span class="n">4</span> Australian bank interest — capital income (taxed separately, flat 25%)
+          </div>
+          <div class="card">
+            <div class="field" style="max-width:380px; margin-bottom:20px">
+              <label>Australian bank interest received (gross, in €)</label>
+              <div class="input">
+                <span>€</span><input
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  step="500"
+                  bind:value={interest}
+                />
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <tbody>
+                  <tr><td>Gross interest</td><td>{eur(r.cap.interest)}</td></tr>
+                  <tr
+                    ><td>− Sparer-Pauschbetrag (married)</td><td>− {eur(Math.min(r.cap.interest, 2000))}</td
+                    ></tr
+                  >
+                  <tr><td>= Taxable in Germany</td><td>{eur(r.cap.taxable)}</td></tr>
+                  <tr><td>Abgeltungsteuer (25%)</td><td>{eur(r.cap.abgGross)}</td></tr>
+                  <tr><td>− Australian tax credited (10%)</td><td>− {eur(r.cap.auCredit)}</td></tr>
+                  <tr><td>+ Soli (5.5%)</td><td>+ {eur(r.cap.soliInt)}</td></tr>
+                  <tr class="net"><td>German tax due on the interest</td><td>{eur(r.cap.germanDue)}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            {#if iNote}<p class="recon-note">{iNote}</p>{/if}
+          </div>
+        </div>
+        <!-- /.dash-cell interest -->
+
+        <div class="dash-cell">
+          <!-- ============ ANNUAL INCOME TAX ============ -->
+          <div class="sec-title">
+            <span class="n">5</span> Annual income tax — the truth (tax classes don't change this)
+          </div>
+          <div class="total">
+            <div>
+              <div class="lbl">Total tax owed in Germany</div>
+              <div class="big">{eur(r.annualTotal)}</div>
+              <div class="lbl" style="margin-top:8px">
+                Income tax <b style="color:var(--ink)">{eur(r.incomeTax)}</b> · Soli
+                <b style="color:var(--ink)">{eur(r.annualSoli)}</b>
+              </div>
+            </div>
+            <div class="rates">
+              <div>
+                <div class="lbl">Effective rate</div>
+                <b>{pct(r.effective)}</b>
+              </div>
+              <div>
+                <div class="lbl">Marginal rate</div>
+                <b>{pct(r.marginal)}</b>
+              </div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <div class="k">Combined taxable income (est. zvE)</div>
+              <div class="v">{eur(r.zvE)}</div>
+            </div>
+            <div class="stat">
+              <div class="k">Tax if the rent weren't counted</div>
+              <div class="v">{eur(r.taxNoRent)}</div>
+            </div>
+            <div class="stat cost">
+              <div class="k">Cost of the Australian rent (progression)</div>
+              <div class="v">+ {eur(r.costOfRent)}</div>
+            </div>
+            <div class="stat">
+              <div class="k">Special rate applied (bes. Steuersatz)</div>
+              <div class="v">{pct(r.specialRate)}</div>
+            </div>
+          </div>
+        </div>
+        <!-- /.dash-cell income tax -->
+
+        <div class="dash-cell">
+          <!-- ============ MONTHLY TAKE-HOME ============ -->
+          <div class="sec-title"><span class="n">6</span> Monthly take-home — net income breakdown</div>
+          <div class="card" style="padding:8px 8px 0">
+            <div class="table-scroll">
+              <table>
+                <thead
+                  ><tr
+                    ><th>Per month</th><th>You <span class="cls-pill">{classYou}</span></th><th
+                      >Wife <span class="cls-pill">{classWife}</span></th
+                    ><th>Together</th></tr
+                  ></thead
                 >
-                <td style="color:{row.bal >= 0 ? 'var(--good)' : 'var(--bad)'}"
-                  >{row.bal >= 0 ? '+ ' + eur(row.bal) : '− ' + eur(Math.abs(row.bal))}</td
-                >
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-      <p class="recon-note">{comboNote}</p>
-    </div>
-  </div>
+                <tbody>
+                  <tr
+                    ><td>Gross</td><td>{eur(m(r.p1, 'g'))}</td><td>{eur(m(r.p2, 'g'))}</td><td
+                      >{eur(m(r.p1, 'g') + m(r.p2, 'g'))}</td
+                    ></tr
+                  >
+                  <tr
+                    ><td>− Pension &amp; unemployment</td><td>− {eur(m(r.p1, 'rvAlv'))}</td><td
+                      >− {eur(m(r.p2, 'rvAlv'))}</td
+                    ><td>− {eur(m(r.p1, 'rvAlv') + m(r.p2, 'rvAlv'))}</td></tr
+                  >
+                  <tr
+                    ><td>− Health insurance (KV)</td><td>− {eur(m(r.p1, 'kv'))}</td><td
+                      >− {eur(m(r.p2, 'kv'))}</td
+                    ><td>− {eur(m(r.p1, 'kv') + m(r.p2, 'kv'))}</td></tr
+                  >
+                  <tr
+                    ><td>− Care insurance (PV)</td><td>− {eur(m(r.p1, 'pv'))}</td><td
+                      >− {eur(m(r.p2, 'pv'))}</td
+                    ><td>− {eur(m(r.p1, 'pv') + m(r.p2, 'pv'))}</td></tr
+                  >
+                  <tr
+                    ><td>− Income tax (+ Soli)</td><td>− {eur(m(r.p1, 'withheld'))}</td><td
+                      >− {eur(m(r.p2, 'withheld'))}</td
+                    ><td>− {eur(m(r.p1, 'withheld') + m(r.p2, 'withheld'))}</td></tr
+                  >
+                  <tr class="net"
+                    ><td>Net in pocket</td><td>{eur(m(r.p1, 'netA'))}</td><td>{eur(m(r.p2, 'netA'))}</td><td
+                      >{eur(m(r.p1, 'netA') + m(r.p2, 'netA'))}</td
+                    ></tr
+                  >
+                </tbody>
+              </table>
+            </div>
+            <div class="stats" style="margin-top:14px">
+              <div class="stat">
+                <div class="k">Net income / year (take-home)</div>
+                <div class="v">{eur(annualNet)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Health + care insurance / year</div>
+                <div class="v">{eur(annualHealth)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /.dash-cell monthly -->
 
-  <!-- ============ DENKMAL-AfA ============ -->
-  <div class="sec-title"><span class="n">10</span> Denkmal-AfA — listed-building renovation (§10f)</div>
-  <div class="card">
-    <div class="row2">
-      <div class="field">
-        <label>Total eligible renovation costs (owner-occupied)</label>
-        <div class="input">
-          <span>€</span><input
-            type="number"
-            inputmode="numeric"
-            min="0"
-            step="5000"
-            bind:value={denkmalCost}
-          />
+        <div class="dash-cell">
+          <!-- ============ RECONCILIATION ============ -->
+          <div class="sec-title"><span class="n">7</span> Year-end reconciliation</div>
+          <div class="card">
+            <div class="recon">
+              <div class="leg">
+                <div class="lbl">Withheld over the year</div>
+                <div class="v">{eur(r.withheld)}</div>
+              </div>
+              <div class="arrow">vs</div>
+              <div class="leg">
+                <div class="lbl">True annual liability</div>
+                <div class="v">{eur(r.annualTotal)}</div>
+              </div>
+              <div class="balance {r.balance >= 0 ? 'refund' : 'owe'}">
+                <div class="lbl">{r.balance >= 0 ? 'Expected refund' : 'Expected back-payment'}</div>
+                <div class="v">{r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(-r.balance)}</div>
+              </div>
+            </div>
+            <p class="recon-note">{rNote}</p>
+          </div>
         </div>
-      </div>
-      <div class="field">
-        <label>Written off this year (9%)</label>
-        <div class="static-field" style="color:var(--accent2)">
-          {eur(r.denkmalAfA)} <span style="color:var(--muted); font-size:13px">· 9%/yr for 10 years</span>
+        <!-- /.dash-cell reconciliation -->
+
+        <div class="dash-cell">
+          <!-- ============ FINE-TUNER ============ -->
+          <div class="sec-title"><span class="n">8</span> Fine-tuner — nudge the levers you control</div>
+          <div class="card">
+            <div class="field">
+              <label
+                >Additional deductions (€/yr) — extra Werbungskosten, Sonderausgaben, deductible pension or
+                freelance expenses</label
+              >
+              <div class="tuner-row">
+                <input type="range" min="0" max="30000" step="250" bind:value={deductions} />
+                <div class="input" style="width:160px">
+                  <span>€</span><input
+                    type="number"
+                    min="0"
+                    max="200000"
+                    step="250"
+                    bind:value={deductions}
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="stats" style="margin-top:6px">
+              <div class="stat">
+                <div class="k">Taxable income after deductions</div>
+                <div class="v">{eur(r.zvE)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Income tax saved (deductions)</div>
+                <div class="v" style="color:var(--good)">
+                  {deductionsSaved > 0 ? '− ' + eur(deductionsSaved) : eur(0)}
+                </div>
+              </div>
+              <div class="stat">
+                <div class="k">New total German tax</div>
+                <div class="v">{eur(r.grandTotal)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Year-end balance now</div>
+                <div class="v" style="color:{r.balance >= 0 ? 'var(--good)' : 'var(--bad)'}">
+                  {r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(Math.abs(r.balance))}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:24px">
+              <div
+                style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:12px"
+              >
+                Tax-class comparison — same total tax, only the cash-flow timing differs
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead><tr><th>Combo</th><th>Combined net / month</th><th>Year-end balance</th></tr></thead>
+                  <tbody>
+                    {#each rows as row (row.a + '+' + row.b)}
+                      {@const cur = row.a === classYou && row.b === classWife}
+                      <tr class:cur>
+                        <td>{row.a} + {row.b}{cur ? ' · current' : ''}</td>
+                        <td
+                          >{eur(row.net)}{#if row.net === bestNet}<span class="recommend">
+                              ▲ most cash</span
+                            >{/if}</td
+                        >
+                        <td style="color:{row.bal >= 0 ? 'var(--good)' : 'var(--bad)'}"
+                          >{row.bal >= 0 ? '+ ' + eur(row.bal) : '− ' + eur(Math.abs(row.bal))}</td
+                        >
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+              <p class="recon-note">{comboNote}</p>
+            </div>
+          </div>
         </div>
+        <!-- /.dash-cell fine-tuner -->
+
+        <div class="dash-cell">
+          <!-- ============ DENKMAL-AfA ============ -->
+          <div class="sec-title">
+            <span class="n">9</span> Denkmal-AfA — listed-building renovation (§10f)
+          </div>
+          <div class="card">
+            <div class="row2">
+              <div class="field">
+                <label>Total eligible renovation costs (owner-occupied)</label>
+                <div class="input">
+                  <span>€</span><input
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    step="5000"
+                    bind:value={denkmalCost}
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <label>Written off this year (9%)</label>
+                <div class="static-field" style="color:var(--accent2)">
+                  {eur(r.denkmalAfA)}
+                  <span style="color:var(--muted); font-size:13px">· 9%/yr for 10 years</span>
+                </div>
+              </div>
+            </div>
+            <div class="stats" style="margin-top:16px">
+              <div class="stat">
+                <div class="k">Tax payable without Denkmal</div>
+                <div class="v">{eur(noDenkmal.annualTotal)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Tax payable with Denkmal</div>
+                <div class="v">{eur(r.annualTotal)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Income tax saved this year</div>
+                <div class="v" style="color:var(--good)">
+                  {denkmalSaved > 0 ? '− ' + eur(denkmalSaved) : eur(0)}
+                </div>
+              </div>
+            </div>
+            {#if r.denkmalAfA > 0}
+              <p class="recon-note">
+                The {eur(r.denkmalAfA)} write-off lowers your taxable income, cutting this year's payable income
+                tax (incl. Soli) from {eur(noDenkmal.annualTotal)} to {eur(r.annualTotal)} — a saving of {eur(
+                  denkmalSaved,
+                )}, repeatable for 10 years.
+              </p>
+            {/if}
+          </div>
+        </div>
+        <!-- /.dash-cell denkmal -->
       </div>
+      <!-- /.dash -->
     </div>
-    <div class="stats" style="margin-top:16px">
-      <div class="stat">
-        <div class="k">Tax payable without Denkmal</div>
-        <div class="v">{eur(noDenkmal.annualTotal)}</div>
-      </div>
-      <div class="stat">
-        <div class="k">Tax payable with Denkmal</div>
-        <div class="v">{eur(r.annualTotal)}</div>
-      </div>
-      <div class="stat">
-        <div class="k">Income tax saved this year</div>
-        <div class="v" style="color:var(--good)">{denkmalSaved > 0 ? '− ' + eur(denkmalSaved) : eur(0)}</div>
-      </div>
-    </div>
-    {#if r.denkmalAfA > 0}
-      <p class="recon-note">
-        The {eur(r.denkmalAfA)} write-off lowers your taxable income, cutting this year's payable income tax (incl.
-        Soli) from {eur(noDenkmal.annualTotal)} to {eur(r.annualTotal)} — a saving of {eur(denkmalSaved)},
-        repeatable for 10 years.
-      </p>
-    {/if}
+    <!-- /.results -->
   </div>
+  <!-- /.panes -->
 
   <p class="assumptions">
     <b>Approximate — for orientation only, not tax advice or a Lohnabrechnung.</b>
