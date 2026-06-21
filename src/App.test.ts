@@ -76,6 +76,13 @@ describe('App.svelte', () => {
     expect(screen.getAllByText(expected).length).toBeGreaterThan(0)
   })
 
+  it('has a dedicated Denkmal card that shows the payable tax', () => {
+    render(App)
+    expect(screen.getAllByText(/Denkmal-AfA/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Tax payable without Denkmal/i)).toBeTruthy()
+    expect(screen.getByText(/Tax payable with Denkmal/i)).toBeTruthy()
+  })
+
   it('recalculates when the tax year changes', async () => {
     const { container } = render(App)
     const select = container.querySelector<HTMLSelectElement>('select#year')!

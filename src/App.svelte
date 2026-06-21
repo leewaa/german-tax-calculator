@@ -45,8 +45,10 @@
     consent = 'declined'
   }
   const r = $derived(calculate(input))
-  const baseline = $derived(calculate({ ...input, deductions: 0, denkmalCost: 0 }))
-  const saved = $derived(Math.max(0, baseline.annualTotal - r.annualTotal))
+  // Isolate each lever's effect on the payable tax.
+  const deductionsSaved = $derived(Math.max(0, calculate({ ...input, deductions: 0 }).annualTotal - r.annualTotal))
+  const noDenkmal = $derived(calculate({ ...input, denkmalCost: 0 }))
+  const denkmalSaved = $derived(Math.max(0, noDenkmal.annualTotal - r.annualTotal))
 
   // Net income (take-home), with health + care insurance explicitly subtracted.
   const monthlyNet = $derived((r.p1.netA + r.p2.netA) / 12)
@@ -303,16 +305,9 @@
         <div class="input" style="width:160px"><span>€</span><input type="number" min="0" max="200000" step="250" bind:value={deductions}></div>
       </div>
     </div>
-    <div class="field">
-      <label>Denkmal renovation costs — total eligible, owner-occupied (§10f)</label>
-      <div class="tuner-row">
-        <div class="input" style="flex:1"><span>€</span><input type="number" inputmode="numeric" min="0" step="5000" bind:value={denkmalCost}></div>
-        <div style="width:260px; color:var(--muted); font-size:13px">→ written off this year (9%): <b style="color:var(--accent2)">{eur(r.denkmalAfA)}</b><br><span style="font-size:11px">9%/yr for 10 years</span></div>
-      </div>
-    </div>
     <div class="stats" style="margin-top:6px">
       <div class="stat"><div class="k">Taxable income after deductions</div><div class="v">{eur(r.zvE)}</div></div>
-      <div class="stat"><div class="k">Income tax saved</div><div class="v" style="color:var(--good)">{saved > 0 ? '− ' + eur(saved) : eur(0)}</div></div>
+      <div class="stat"><div class="k">Income tax saved (deductions)</div><div class="v" style="color:var(--good)">{deductionsSaved > 0 ? '− ' + eur(deductionsSaved) : eur(0)}</div></div>
       <div class="stat"><div class="k">New total German tax</div><div class="v">{eur(r.grandTotal)}</div></div>
       <div class="stat"><div class="k">Year-end balance now</div><div class="v" style="color:{r.balance >= 0 ? 'var(--good)' : 'var(--bad)'}">{r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(Math.abs(r.balance))}</div></div>
     </div>
@@ -338,6 +333,29 @@
       </div>
       <p class="recon-note">{comboNote}</p>
     </div>
+  </div>
+
+  <!-- ============ DENKMAL-AfA ============ -->
+  <div class="sec-title"><span class="n">10</span> Denkmal-AfA — listed-building renovation (§10f)</div>
+  <div class="card">
+    <div class="row2">
+      <div class="field">
+        <label>Total eligible renovation costs (owner-occupied)</label>
+        <div class="input"><span>€</span><input type="number" inputmode="numeric" min="0" step="5000" bind:value={denkmalCost}></div>
+      </div>
+      <div class="field">
+        <label>Written off this year (9%)</label>
+        <div class="static-field" style="color:var(--accent2)">{eur(r.denkmalAfA)} <span style="color:var(--muted); font-size:13px">· 9%/yr for 10 years</span></div>
+      </div>
+    </div>
+    <div class="stats" style="margin-top:16px">
+      <div class="stat"><div class="k">Tax payable without Denkmal</div><div class="v">{eur(noDenkmal.annualTotal)}</div></div>
+      <div class="stat"><div class="k">Tax payable with Denkmal</div><div class="v">{eur(r.annualTotal)}</div></div>
+      <div class="stat"><div class="k">Income tax saved this year</div><div class="v" style="color:var(--good)">{denkmalSaved > 0 ? '− ' + eur(denkmalSaved) : eur(0)}</div></div>
+    </div>
+    {#if r.denkmalAfA > 0}
+      <p class="recon-note">The {eur(r.denkmalAfA)} write-off lowers your taxable income, cutting this year's payable income tax (incl. Soli) from {eur(noDenkmal.annualTotal)} to {eur(r.annualTotal)} — a saving of {eur(denkmalSaved)}, repeatable for 10 years.</p>
+    {/if}
   </div>
 
   <p class="assumptions">
