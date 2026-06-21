@@ -373,10 +373,23 @@
                 <div class="v">{pct(r.specialRate)}</div>
               </div>
             </div>
-            <p class="note">
-              The {eur(ausRent)} rent is tax-exempt in Germany but lifts the rate applied to your salary (Progressionsvorbehalt)
-              — adding {eur(r.costOfRent)} to your bill.
-            </p>
+            {#if ausRent > 0}
+              <p class="note">
+                Under the Germany–Australia tax treaty your <b>{eur(ausRent)}</b> of Australian rental income
+                is <b>exempt</b> — you owe no German tax on the rent itself. But
+                <em>Progressionsvorbehalt</em> (§32b EStG) still counts it when setting your <b>rate</b>: your
+                German taxable income is charged at the higher special rate of
+                <b>{pct(r.specialRate)}</b> instead of the rate it would attract on its own. That lifts the
+                income tax on your salary from {eur(r.taxNoRent)} to {eur(r.taxNoRent + r.costOfRent)} — a
+                <b>{eur(r.costOfRent)}</b> surcharge driven purely by progression, not by taxing the rent.
+              </p>
+            {:else}
+              <p class="note">
+                With no Australian rental income there's no <em>Progressionsvorbehalt</em> effect — your salary
+                is taxed at its normal rate. Enter a rent amount on the left to see how this treaty-exempt income
+                (§32b EStG) still lifts the rate applied to your German income.
+              </p>
+            {/if}
           </div>
         </article>
 
@@ -1273,6 +1286,10 @@
     font-size: 13px;
     margin: 14px 0 0;
     line-height: 1.6;
+  }
+  .note b {
+    color: var(--ink);
+    font-weight: 700;
   }
   .callout {
     margin: 14px 0 0;
