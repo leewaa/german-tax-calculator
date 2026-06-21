@@ -71,21 +71,7 @@
   const annualNet = $derived(r.p1.netA + r.p2.netA)
   const annualHealth = $derived(r.p1.kv + r.p1.pv + r.p2.kv + r.p2.pv)
 
-  // tax-class comparison: same total tax, differing monthly net / year-end balance
-  const combos: [TaxClass, TaxClass][] = [
-    ['III', 'V'],
-    ['V', 'III'],
-    ['IV', 'IV'],
-  ]
-  const rows = $derived(
-    combos.map(([a, b]) => {
-      const rr = calculate({ ...input, classYou: a, classWife: b })
-      return { a, b, net: (rr.p1.netA + rr.p2.netA) / 12, bal: rr.balance }
-    }),
-  )
-  const bestNet = $derived(Math.max(...rows.map((x) => x.net)))
-  const richest = $derived(rows.reduce((mx, x) => (x.net > mx.net ? x : mx)))
-  const closest = $derived(rows.reduce((mn, x) => (Math.abs(x.bal) < Math.abs(mn.bal) ? x : mn)))
+  // A married couple can only run III+V (or V+III) or IV+IV.
   const comboValid = $derived(['III+V', 'IV+IV'].includes([classYou, classWife].slice().sort().join('+')))
 
   const eur = (n: number) =>
@@ -118,47 +104,39 @@
       ? `You'd have over-withheld during the year and get this back. Note: the Australian rent's progression is already included in the true liability — without it, the refund would be larger.${freeNote}`
       : `You'd have under-withheld and owe this on your return. The Australian rent adds ${eur(r.costOfRent)} of progression tax that isn't in your monthly Lohnsteuer, pushing you toward a back-payment.${freeNote}`,
   )
-  const comboNote = $derived(
-    `Same total annual tax whichever you pick — only the timing moves. ${richest.a}+${richest.b} puts the most in your pocket monthly (${eur(richest.net)}), while ${closest.a}+${closest.b} lands closest to an even year-end settlement.`,
-  )
 </script>
 
-<div class="wrap">
-  <span class="tag">◆ Tax year {year} · Married / jointly</span>
-  <h1>German Tax Calculator</h1>
-  <p class="lede">
-    Two incomes, your tax classes, health insurance, and the Australian rent that lifts your German rate via <em
-      >Progressionsvorbehalt</em
-    > — from the annual tax you owe to the net income you actually take home.
-  </p>
+<div class="shell">
+  <header class="head">
+    <span class="tag">◆ Tax year {year} · Married / jointly</span>
+    <h1>German Tax Calculator</h1>
+    <p class="lede">
+      Every input lives on the left; the right side is purely what it computes. Two incomes, your tax classes,
+      health insurance, and the Australian rent that lifts your German rate via <em>Progressionsvorbehalt</em> —
+      from the annual tax you owe to the net income you actually take home.
+    </p>
+  </header>
 
   <div class="panes">
-    <div class="rail">
-      <!-- ============ INPUTS · household ============ -->
-      <div class="sec-title"><span class="n">1</span> Your household</div>
-      <div class="grid" style="margin-bottom:16px">
+    <!-- ===================== RAIL · all inputs ===================== -->
+    <aside class="rail">
+      <section class="grp">
+        <h2 class="grp-head">Household</h2>
         <div class="card">
-          <div class="field year-field">
+          <div class="field">
             <label for="year">Tax year</label>
             <select id="year" bind:value={year}>
               {#each TAX_YEARS as y (y)}<option value={y}>{y}</option>{/each}
             </select>
           </div>
         </div>
-      </div>
-      {#if !comboValid}
-        <div class="warn-box">
-          ⚠ A married couple can only run III + V (or V + III) or IV + IV. The annual bill is still correct,
-          but the monthly withholding for this combo isn't a real-world option.
-        </div>
-      {/if}
-      <div class="grid cols2">
         <div class="card">
-          <h3>You</h3>
           <div class="field">
-            <label>Gross annual salary</label>
+            <label for="grossYou">You · gross annual salary</label>
             <div class="input">
-              <span>€</span><input
+              <span class="prefix">€</span>
+              <input
+                id="grossYou"
                 type="number"
                 inputmode="numeric"
                 min="0"
@@ -169,7 +147,7 @@
           </div>
           <div class="field">
             <label>Tax class (Steuerklasse)</label>
-            <div class="classes">
+            <div class="pills">
               <button class:on={classYou === 'III'} onclick={() => (classYou = 'III')}>III</button><button
                 class:on={classYou === 'IV'}
                 onclick={() => (classYou = 'IV')}>IV</button
@@ -178,11 +156,12 @@
           </div>
         </div>
         <div class="card">
-          <h3>Your wife</h3>
           <div class="field">
-            <label>Gross annual salary</label>
+            <label for="grossWife">Wife · gross annual salary</label>
             <div class="input">
-              <span>€</span><input
+              <span class="prefix">€</span>
+              <input
+                id="grossWife"
                 type="number"
                 inputmode="numeric"
                 min="0"
@@ -193,7 +172,7 @@
           </div>
           <div class="field">
             <label>Tax class (Steuerklasse)</label>
-            <div class="classes">
+            <div class="pills">
               <button class:on={classWife === 'III'} onclick={() => (classWife = 'III')}>III</button><button
                 class:on={classWife === 'IV'}
                 onclick={() => (classWife = 'IV')}>IV</button
@@ -201,127 +180,213 @@
             </div>
           </div>
         </div>
-      </div>
+        {#if !comboValid}
+          <div class="warn-box">
+            ⚠ A married couple can only run III + V (or V + III) or IV + IV. The annual bill is still correct,
+            but the monthly withholding for this combo isn't a real-world option.
+          </div>
+        {/if}
+      </section>
 
-      <!-- ============ INPUTS · health & family ============ -->
-      <div class="sec-title"><span class="n">2</span> Health insurance &amp; family</div>
-      <div class="grid">
+      <section class="grp">
+        <h2 class="grp-head">Health &amp; family</h2>
         <div class="card">
-          <div class="row3">
-            <div class="field">
-              <label>Health insurance</label>
-              <div class="static-field">Statutory (gesetzlich)</div>
-            </div>
-            <div class="field">
-              <label>Krankenkasse Zusatzbeitrag</label>
+          <div class="field">
+            <label>Health insurance</label>
+            <div class="static">Statutory (gesetzlich)</div>
+          </div>
+          <div class="field two">
+            <div>
+              <label for="zusatz">Zusatzbeitrag</label>
               <div class="input">
-                <span style="left:auto;right:14px">%</span><input
+                <input
+                  id="zusatz"
                   type="number"
                   inputmode="decimal"
                   min="0"
                   max="5"
                   step="0.1"
                   bind:value={zusatzPct}
-                  style="padding-left:14px"
                 />
+                <span class="suffix">%</span>
               </div>
             </div>
-            <div class="field">
-              <label>Children (under 25)</label>
+            <div>
+              <label for="kids">Children &lt; 25</label>
               <div class="input">
                 <input
+                  id="kids"
                   type="number"
                   inputmode="numeric"
                   min="0"
                   max="10"
                   step="1"
                   bind:value={kids}
-                  style="padding-left:14px"
                 />
               </div>
             </div>
           </div>
           <p class="field-note">
             You both pay statutory <b>health insurance</b> (7.3% + half your Zusatzbeitrag) and
-            <b>care insurance</b>, each capped at the {year} contribution ceiling. Children lower the care-insurance
-            rate. These feed directly into your net income below.
+            <b>care insurance</b>, each capped at the {year} ceiling. Children lower the care-insurance rate. These
+            feed directly into your net income.
           </p>
         </div>
-      </div>
+      </section>
 
-      <!-- ============ INPUTS · other income ============ -->
-      <div class="sec-title"><span class="n">3</span> Other income</div>
-      <div class="grid">
+      <section class="grp">
+        <h2 class="grp-head">Income</h2>
         <div class="card">
-          <div class="row2">
-            <div class="field">
-              <label>Australian net rental income (€) — exempt, progression-relevant</label>
-              <div class="input">
-                <span>€</span><input
-                  type="number"
-                  inputmode="numeric"
-                  min="0"
-                  step="500"
-                  bind:value={ausRent}
-                />
-              </div>
+          <div class="field">
+            <label for="ausRent">Australian rental income — exempt, progression-relevant</label>
+            <div class="input">
+              <span class="prefix">€</span>
+              <input id="ausRent" type="number" inputmode="numeric" min="0" step="500" bind:value={ausRent} />
             </div>
-            <div class="field">
-              <label>Your freelance income (freiberuflich, taxable profit €)</label>
-              <div class="input">
-                <span>€</span><input
-                  type="number"
-                  inputmode="numeric"
-                  min="0"
-                  step="1000"
-                  bind:value={freelance}
-                />
-              </div>
+          </div>
+          <div class="field">
+            <label for="freelance">Your freelance income (freiberuflich, taxable profit)</label>
+            <div class="input">
+              <span class="prefix">€</span>
+              <input
+                id="freelance"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1000"
+                bind:value={freelance}
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label for="interest">Australian bank interest received (gross)</label>
+            <div class="input">
+              <span class="prefix">€</span>
+              <input
+                id="interest"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="500"
+                bind:value={interest}
+              />
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    <!-- /.rail -->
+      </section>
 
+      <section class="grp">
+        <h2 class="grp-head">Reliefs</h2>
+        <div class="card">
+          <div class="field two">
+            <div>
+              <label for="denkmal">Denkmal renovation cost</label>
+              <div class="input">
+                <span class="prefix">€</span>
+                <input
+                  id="denkmal"
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  step="5000"
+                  bind:value={denkmalCost}
+                />
+              </div>
+            </div>
+            <div>
+              <label>Written off (9% / yr)</label>
+              <div class="static accent">{eur(r.denkmalAfA)}</div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="deductions">Additional deductions (€ / yr)</label>
+            <div class="tuner-row">
+              <input
+                type="range"
+                min="0"
+                max="30000"
+                step="250"
+                bind:value={deductions}
+                aria-label="Additional deductions"
+              />
+              <div class="input">
+                <span class="prefix">€</span>
+                <input
+                  id="deductions"
+                  type="number"
+                  min="0"
+                  max="200000"
+                  step="250"
+                  bind:value={deductions}
+                />
+              </div>
+            </div>
+            <p class="field-note">
+              Extra Werbungskosten, Sonderausgaben, deductible pension or freelance expenses — enter the net
+              deductible total. Real deductions have their own caps.
+            </p>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ===================== RESULTS ===================== -->
     <div class="results">
       <div class="hero">
-        <div class="hero-tile">
+        <div class="tile">
           <div class="lbl">Total German tax</div>
           <div class="big">{eur(r.grandTotal)}</div>
           <div class="sub">Income tax {eur(r.annualTotal)} · Interest {eur(r.cap.germanDue)}</div>
         </div>
-        <div class="hero-tile">
+        <div class="tile">
           <div class="lbl">Net income / month</div>
           <div class="big">{eur(monthlyNet)}</div>
           <div class="sub">{eur(annualNet)} / yr take-home</div>
         </div>
-        <div class="hero-tile {r.balance >= 0 ? 'refund' : 'owe'}">
+        <div class="tile {r.balance >= 0 ? 'refund' : 'owe'}">
           <div class="lbl">Year-end balance</div>
           <div class="big">{r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(-r.balance)}</div>
           <div class="sub">{r.balance >= 0 ? 'expected refund' : 'expected back-payment'}</div>
         </div>
       </div>
 
-      <div class="dash">
-        <div class="dash-cell">
-          <!-- ============ CAPITAL INCOME ============ -->
-          <div class="sec-title">
-            <span class="n">4</span> Australian bank interest — capital income (taxed separately, flat 25%)
+      <div class="grid">
+        <!-- ROW 1 · Australian rent · progression | Bank interest · capital -->
+        <article class="card flush">
+          <div class="card-title">
+            <span class="badge">⌖</span>
+            <h3>Australian rent · progression</h3>
+            <span class="meta">§32b · exempt, rate-relevant</span>
           </div>
-          <div class="card">
-            <div class="field" style="max-width:380px; margin-bottom:20px">
-              <label>Australian bank interest received (gross, in €)</label>
-              <div class="input">
-                <span>€</span><input
-                  type="number"
-                  inputmode="numeric"
-                  min="0"
-                  step="500"
-                  bind:value={interest}
-                />
+          <div class="card-body">
+            <div class="statrow c3">
+              <div class="stat">
+                <div class="k">Tax without the rent</div>
+                <div class="v">{eur(r.taxNoRent)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Cost of the rent (progression)</div>
+                <div class="v warn">+ {eur(r.costOfRent)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Special rate (bes. Steuersatz)</div>
+                <div class="v">{pct(r.specialRate)}</div>
               </div>
             </div>
+            <p class="note">
+              The {eur(ausRent)} rent is tax-exempt in Germany but lifts the rate applied to your salary (Progressionsvorbehalt)
+              — adding {eur(r.costOfRent)} to your bill.
+            </p>
+          </div>
+        </article>
+
+        <article class="card flush">
+          <div class="card-title">
+            <span class="badge">%</span>
+            <h3>Bank interest · capital</h3>
+            <span class="meta">flat 25% Abgeltungsteuer</span>
+          </div>
+          <div class="card-body pad-top">
             <div class="table-scroll">
               <table>
                 <tbody>
@@ -338,70 +403,145 @@
                 </tbody>
               </table>
             </div>
-            {#if iNote}<p class="recon-note">{iNote}</p>{/if}
+            {#if iNote}<p class="note">{iNote}</p>{/if}
           </div>
-        </div>
-        <!-- /.dash-cell interest -->
+        </article>
 
-        <div class="dash-cell">
-          <!-- ============ ANNUAL INCOME TAX ============ -->
-          <div class="sec-title">
-            <span class="n">5</span> Annual income tax — the truth (tax classes don't change this)
+        <!-- ROW 2 · Deductions impact | Denkmal-AfA impact -->
+        <article class="card flush">
+          <div class="card-title">
+            <span class="badge">↓</span>
+            <h3>Deductions impact</h3>
           </div>
-          <div class="total">
-            <div>
-              <div class="lbl">Total tax owed in Germany</div>
-              <div class="big">{eur(r.annualTotal)}</div>
-              <div class="lbl" style="margin-top:8px">
-                Income tax <b style="color:var(--ink)">{eur(r.incomeTax)}</b> · Soli
-                <b style="color:var(--ink)">{eur(r.annualSoli)}</b>
+          <div class="card-body">
+            <div class="statrow c2">
+              <div class="stat">
+                <div class="k">Taxable income after deductions</div>
+                <div class="v">{eur(r.zvE)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Income tax saved (deductions)</div>
+                <div class="v good">{deductionsSaved > 0 ? '− ' + eur(deductionsSaved) : eur(0)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">New total German tax</div>
+                <div class="v">{eur(r.grandTotal)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Year-end balance now</div>
+                <div class="v {r.balance >= 0 ? 'good' : 'bad'}">
+                  {r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(Math.abs(r.balance))}
+                </div>
               </div>
             </div>
-            <div class="rates">
-              <div>
-                <div class="lbl">Effective rate</div>
-                <b>{pct(r.effective)}</b>
-              </div>
-              <div>
-                <div class="lbl">Marginal rate</div>
-                <b>{pct(r.marginal)}</b>
-              </div>
-            </div>
+            <p class="callout">Drag the deductions slider on the left to see this update.</p>
           </div>
-          <div class="stats">
-            <div class="stat">
-              <div class="k">Combined taxable income (est. zvE)</div>
-              <div class="v">{eur(r.zvE)}</div>
-            </div>
-            <div class="stat">
-              <div class="k">Tax if the rent weren't counted</div>
-              <div class="v">{eur(r.taxNoRent)}</div>
-            </div>
-            <div class="stat cost">
-              <div class="k">Cost of the Australian rent (progression)</div>
-              <div class="v">+ {eur(r.costOfRent)}</div>
-            </div>
-            <div class="stat">
-              <div class="k">Special rate applied (bes. Steuersatz)</div>
-              <div class="v">{pct(r.specialRate)}</div>
-            </div>
-          </div>
-        </div>
-        <!-- /.dash-cell income tax -->
+        </article>
 
-        <div class="dash-cell">
-          <!-- ============ MONTHLY TAKE-HOME ============ -->
-          <div class="sec-title"><span class="n">6</span> Monthly take-home — net income breakdown</div>
-          <div class="card" style="padding:8px 8px 0">
+        <article class="card flush">
+          <div class="card-title">
+            <span class="badge">⌂</span>
+            <h3>Denkmal-AfA impact</h3>
+            <span class="meta">§10f · 9% / yr</span>
+          </div>
+          <div class="card-body">
+            <div class="statrow c3">
+              <div class="stat">
+                <div class="k">Tax payable without Denkmal</div>
+                <div class="v">{eur(noDenkmal.annualTotal)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Tax payable with Denkmal</div>
+                <div class="v">{eur(r.annualTotal)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Income tax saved this year</div>
+                <div class="v good">{denkmalSaved > 0 ? '− ' + eur(denkmalSaved) : eur(0)}</div>
+              </div>
+            </div>
+            {#if r.denkmalAfA > 0}
+              <p class="note">
+                The {eur(r.denkmalAfA)} write-off cuts this year's payable income tax (incl. Soli) from {eur(
+                  noDenkmal.annualTotal,
+                )} to {eur(r.annualTotal)} — a saving of {eur(denkmalSaved)}, repeatable for 10 years.
+              </p>
+            {:else}
+              <p class="callout">Enter renovation cost on the left to model the 10-year write-off.</p>
+            {/if}
+          </div>
+        </article>
+
+        <!-- ROW 3 · Annual income tax | Year-end reconciliation -->
+        <article class="card flush">
+          <div class="card-title">
+            <span class="badge">▦</span>
+            <h3>Annual income tax</h3>
+            <span class="meta">tax classes don't change this</span>
+          </div>
+          <div class="card-body">
+            <div class="big">{eur(r.annualTotal)}</div>
+            <div class="caption">
+              Income tax <b>{eur(r.incomeTax)}</b> · Soli <b>{eur(r.annualSoli)}</b>
+            </div>
+            <div class="statrow c3">
+              <div class="stat">
+                <div class="k">Effective rate</div>
+                <div class="v accent">{pct(r.effective)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Marginal rate</div>
+                <div class="v accent">{pct(r.marginal)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">Taxable income (est. zvE)</div>
+                <div class="v">{eur(r.zvE)}</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card flush">
+          <div class="card-title">
+            <span class="badge">⇄</span>
+            <h3>Year-end reconciliation</h3>
+          </div>
+          <div class="card-body">
+            <div class="statrow c2">
+              <div class="stat">
+                <div class="k">Withheld over the year</div>
+                <div class="v">{eur(r.withheld)}</div>
+              </div>
+              <div class="stat">
+                <div class="k">True annual liability</div>
+                <div class="v">{eur(r.annualTotal)}</div>
+              </div>
+            </div>
+            <div class="balance {r.balance >= 0 ? 'refund' : 'owe'}">
+              <div class="k">{r.balance >= 0 ? 'Expected refund' : 'Expected back-payment'}</div>
+              <div class="v">{r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(-r.balance)}</div>
+            </div>
+            <p class="note">{rNote}</p>
+          </div>
+        </article>
+
+        <!-- ROW 4 · Monthly take-home (full width) -->
+        <article class="card flush span2">
+          <div class="card-title">
+            <span class="badge">€</span>
+            <h3>Monthly take-home</h3>
+            <span class="meta">net income breakdown</span>
+          </div>
+          <div class="card-body pad-top">
             <div class="table-scroll">
               <table>
-                <thead
-                  ><tr
-                    ><th>Per month</th><th>You <span class="cls-pill">{classYou}</span></th><th
-                      >Wife <span class="cls-pill">{classWife}</span></th
-                    ><th>Together</th></tr
-                  ></thead
-                >
+                <thead>
+                  <tr>
+                    <th>Per month</th>
+                    <th>You <span class="cls-pill">{classYou}</span></th>
+                    <th>Wife <span class="cls-pill">{classWife}</span></th>
+                    <th>Together</th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr
                     ><td>Gross</td><td>{eur(m(r.p1, 'g'))}</td><td>{eur(m(r.p2, 'g'))}</td><td
@@ -436,7 +576,7 @@
                 </tbody>
               </table>
             </div>
-            <div class="stats" style="margin-top:14px">
+            <div class="statrow c2 pad-top">
               <div class="stat">
                 <div class="k">Net income / year (take-home)</div>
                 <div class="v">{eur(annualNet)}</div>
@@ -447,193 +587,29 @@
               </div>
             </div>
           </div>
-        </div>
-        <!-- /.dash-cell monthly -->
-
-        <div class="dash-cell">
-          <!-- ============ RECONCILIATION ============ -->
-          <div class="sec-title"><span class="n">7</span> Year-end reconciliation</div>
-          <div class="card">
-            <div class="recon">
-              <div class="leg">
-                <div class="lbl">Withheld over the year</div>
-                <div class="v">{eur(r.withheld)}</div>
-              </div>
-              <div class="arrow">vs</div>
-              <div class="leg">
-                <div class="lbl">True annual liability</div>
-                <div class="v">{eur(r.annualTotal)}</div>
-              </div>
-              <div class="balance {r.balance >= 0 ? 'refund' : 'owe'}">
-                <div class="lbl">{r.balance >= 0 ? 'Expected refund' : 'Expected back-payment'}</div>
-                <div class="v">{r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(-r.balance)}</div>
-              </div>
-            </div>
-            <p class="recon-note">{rNote}</p>
-          </div>
-        </div>
-        <!-- /.dash-cell reconciliation -->
-
-        <div class="dash-cell">
-          <!-- ============ FINE-TUNER ============ -->
-          <div class="sec-title"><span class="n">8</span> Fine-tuner — nudge the levers you control</div>
-          <div class="card">
-            <div class="field">
-              <label
-                >Additional deductions (€/yr) — extra Werbungskosten, Sonderausgaben, deductible pension or
-                freelance expenses</label
-              >
-              <div class="tuner-row">
-                <input type="range" min="0" max="30000" step="250" bind:value={deductions} />
-                <div class="input" style="width:160px">
-                  <span>€</span><input
-                    type="number"
-                    min="0"
-                    max="200000"
-                    step="250"
-                    bind:value={deductions}
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="stats" style="margin-top:6px">
-              <div class="stat">
-                <div class="k">Taxable income after deductions</div>
-                <div class="v">{eur(r.zvE)}</div>
-              </div>
-              <div class="stat">
-                <div class="k">Income tax saved (deductions)</div>
-                <div class="v" style="color:var(--good)">
-                  {deductionsSaved > 0 ? '− ' + eur(deductionsSaved) : eur(0)}
-                </div>
-              </div>
-              <div class="stat">
-                <div class="k">New total German tax</div>
-                <div class="v">{eur(r.grandTotal)}</div>
-              </div>
-              <div class="stat">
-                <div class="k">Year-end balance now</div>
-                <div class="v" style="color:{r.balance >= 0 ? 'var(--good)' : 'var(--bad)'}">
-                  {r.balance >= 0 ? '+ ' + eur(r.balance) : '− ' + eur(Math.abs(r.balance))}
-                </div>
-              </div>
-            </div>
-
-            <div style="margin-top:24px">
-              <div
-                style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:12px"
-              >
-                Tax-class comparison — same total tax, only the cash-flow timing differs
-              </div>
-              <div class="table-scroll">
-                <table>
-                  <thead><tr><th>Combo</th><th>Combined net / month</th><th>Year-end balance</th></tr></thead>
-                  <tbody>
-                    {#each rows as row (row.a + '+' + row.b)}
-                      {@const cur = row.a === classYou && row.b === classWife}
-                      <tr class:cur>
-                        <td>{row.a} + {row.b}{cur ? ' · current' : ''}</td>
-                        <td
-                          >{eur(row.net)}{#if row.net === bestNet}<span class="recommend">
-                              ▲ most cash</span
-                            >{/if}</td
-                        >
-                        <td style="color:{row.bal >= 0 ? 'var(--good)' : 'var(--bad)'}"
-                          >{row.bal >= 0 ? '+ ' + eur(row.bal) : '− ' + eur(Math.abs(row.bal))}</td
-                        >
-                      </tr>
-                    {/each}
-                  </tbody>
-                </table>
-              </div>
-              <p class="recon-note">{comboNote}</p>
-            </div>
-          </div>
-        </div>
-        <!-- /.dash-cell fine-tuner -->
-
-        <div class="dash-cell">
-          <!-- ============ DENKMAL-AfA ============ -->
-          <div class="sec-title">
-            <span class="n">9</span> Denkmal-AfA — listed-building renovation (§10f)
-          </div>
-          <div class="card">
-            <div class="row2">
-              <div class="field">
-                <label>Total eligible renovation costs (owner-occupied)</label>
-                <div class="input">
-                  <span>€</span><input
-                    type="number"
-                    inputmode="numeric"
-                    min="0"
-                    step="5000"
-                    bind:value={denkmalCost}
-                  />
-                </div>
-              </div>
-              <div class="field">
-                <label>Written off this year (9%)</label>
-                <div class="static-field" style="color:var(--accent2)">
-                  {eur(r.denkmalAfA)}
-                  <span style="color:var(--muted); font-size:13px">· 9%/yr for 10 years</span>
-                </div>
-              </div>
-            </div>
-            <div class="stats" style="margin-top:16px">
-              <div class="stat">
-                <div class="k">Tax payable without Denkmal</div>
-                <div class="v">{eur(noDenkmal.annualTotal)}</div>
-              </div>
-              <div class="stat">
-                <div class="k">Tax payable with Denkmal</div>
-                <div class="v">{eur(r.annualTotal)}</div>
-              </div>
-              <div class="stat">
-                <div class="k">Income tax saved this year</div>
-                <div class="v" style="color:var(--good)">
-                  {denkmalSaved > 0 ? '− ' + eur(denkmalSaved) : eur(0)}
-                </div>
-              </div>
-            </div>
-            {#if r.denkmalAfA > 0}
-              <p class="recon-note">
-                The {eur(r.denkmalAfA)} write-off lowers your taxable income, cutting this year's payable income
-                tax (incl. Soli) from {eur(noDenkmal.annualTotal)} to {eur(r.annualTotal)} — a saving of {eur(
-                  denkmalSaved,
-                )}, repeatable for 10 years.
-              </p>
-            {/if}
-          </div>
-        </div>
-        <!-- /.dash-cell denkmal -->
+        </article>
       </div>
-      <!-- /.dash -->
     </div>
-    <!-- /.results -->
   </div>
-  <!-- /.panes -->
 
   <p class="assumptions">
     <b>Approximate — for orientation only, not tax advice or a Lohnabrechnung.</b>
     Tax year {year}, married filing jointly, <b>statutory health insurance</b> (Zusatzbeitrag and number of
-    children are your inputs above), <b>no church tax</b>. Children lower your Pflegeversicherung rate and
-    your Soli base, but — as in the real withholding system — they do <b>not</b> reduce your Lohnsteuer or
-    income tax (no Kindergeld/Kinderfreibetrag Günstigerprüfung is modelled). Lohnsteuer is estimated from the
-    §32a tariff per class with a standard Vorsorgepauschale; expect it within a few percent of your real
-    payslip. Taxable income is estimated from gross via social-security contributions plus the standard
-    allowances.
+    children are your inputs), <b>no church tax</b>. Children lower your Pflegeversicherung rate and your Soli
+    base, but — as in the real withholding system — they do <b>not</b> reduce your Lohnsteuer or income tax
+    (no Kindergeld/Kinderfreibetrag Günstigerprüfung is modelled). Lohnsteuer is estimated from the §32a
+    tariff per class with a standard Vorsorgepauschale; expect it within a few percent of your real payslip.
+    Taxable income is estimated from gross via social-security contributions plus the standard allowances.
     <b>Freelance income</b> (freiberuflich, §18) is added to your taxable income and taxed at your normal rate
     (no Gewerbesteuer); it has no withholding, so in reality you pre-pay it via quarterly Vorauszahlungen. The
     Australian rent is treated as exempt-but-progression-relevant (§32b EStG). Australian
     <b>bank interest</b> is taxed separately at the flat 25% Abgeltungsteuer + 5.5% Soli (no Freigrenze) after
     the €2,000 saver's allowance, with the 10% Australian treaty withholding credited — it does <b>not</b>
-    affect your salary's tax rate, and excess foreign withholding isn't refundable. The fine-tuner's
-    <b>additional deductions</b>
-    simply lower your taxable income (enter the net deductible total — real deductions have their own caps); tax
-    classes change only your monthly cash flow, never the total annual tax. The <b>Denkmal-AfA</b> (§10f, owner-occupied)
-    writes off 9% of the entered renovation costs each year for 10 years as a Sonderausgabe; eligibility (listed-building
-    status, the costs that qualify, the official Bescheinigung from the Denkmalbehörde) is assumed — confirm it
-    with your Steuerberater.
+    affect your salary's tax rate, and excess foreign withholding isn't refundable. The
+    <b>additional deductions</b> simply lower your taxable income; tax classes change only your monthly cash
+    flow, never the total annual tax. The <b>Denkmal-AfA</b> (§10f, owner-occupied) writes off 9% of the entered
+    renovation costs each year for 10 years as a Sonderausgabe; eligibility (listed-building status, qualifying
+    costs, the official Bescheinigung) is assumed — confirm it with your Steuerberater.
   </p>
 </div>
 
@@ -652,12 +628,17 @@
 {/if}
 
 <style>
+  /* ============================================================
+     DESIGN TOKENS — the single place to restyle the whole app.
+     Change a value here and it propagates to every card, label,
+     heading, number and accent below.
+     ============================================================ */
   :global(:root) {
+    /* palette */
     --bg: #131416;
-    --panel: #1e2023;
+    --panel: #1d1f22;
     --panel2: #26282d;
     --line: rgba(255, 255, 255, 0.09);
-    --border: rgba(255, 255, 255, 0.09);
     --ink: #ecedef;
     --muted: #969aa1;
     --paper: #1a1205;
@@ -666,9 +647,48 @@
     --good: #36c28b;
     --warn: #e0a23a;
     --bad: #f0685c;
+    --accent-grad: linear-gradient(140deg, #ff7c3d, #f2521a);
+
     --font-body: 'Hanken Grotesk Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: var(--font-body);
+
+    /* radii */
+    --r-card: 16px;
+    --r-input: 11px;
+    --r-pill: 10px;
+
+    /* spacing rhythm */
+    --rail-gap: 22px; /* between input groups */
+    --card-gap: 12px; /* between cards within a group */
+    --grid-gap: 16px; /* between result cards */
+    --pad-card: 16px 18px;
+    --pad-title: 13px 18px;
+
+    /* TYPE ROLES — reusable heading / label / number recipes.
+       e.g. restyle every card heading by editing --card-title-*. */
+    --grp-head-size: 12px;
+    --grp-head-spacing: 0.16em;
+    --grp-head-weight: 800;
+    --grp-head-color: var(--accent);
+
+    --card-title-size: 15px;
+    --card-title-weight: 800;
+    --card-title-color: var(--ink);
+
+    --label-size: 13px;
+    --label-color: var(--muted);
+    --label-weight: 500;
+
+    --tile-lbl-size: 11px;
+    --tile-lbl-spacing: 0.1em;
+    --tile-lbl-color: var(--muted);
+
+    --stat-k-size: 11px;
+    --stat-v-size: 20px;
+
+    --big-size: clamp(30px, 4vw, 40px);
+    --big-weight: 800;
   }
+
   :global(*) {
     box-sizing: border-box;
   }
@@ -687,12 +707,13 @@
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     padding: 52px 20px 96px;
+    font-variant-numeric: tabular-nums;
   }
-  .wrap {
-    max-width: 1600px;
+  .shell {
+    max-width: 1660px;
     margin: 0 auto;
   }
-  .wrap > * {
+  .shell > * {
     animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
   @keyframes rise {
@@ -706,11 +727,12 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .wrap > * {
+    .shell > * {
       animation: none;
     }
   }
 
+  /* ---- header ---- */
   .tag {
     display: inline-flex;
     gap: 8px;
@@ -726,7 +748,6 @@
     background: rgba(255, 107, 44, 0.07);
   }
   h1 {
-    font-family: var(--font-display);
     font-weight: 800;
     font-size: clamp(34px, 6vw, 58px);
     line-height: 1.02;
@@ -736,139 +757,164 @@
   .lede {
     color: var(--muted);
     font-size: 18px;
-    margin: 0 0 6px;
-    max-width: 640px;
+    margin: 0;
+    max-width: 660px;
     line-height: 1.5;
   }
 
-  .sec-title {
-    font-size: 12px;
-    letter-spacing: 0.16em;
+  /* ---- two-pane shell ---- */
+  .panes {
+    margin-top: 26px;
+  }
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rail-gap);
+  }
+  .results {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--grid-gap);
+    margin-top: var(--rail-gap);
+  }
+
+  /* ---- reusable: rail group + its header ---- */
+  .grp {
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-gap);
+  }
+  .grp-head {
+    font-size: var(--grp-head-size);
+    letter-spacing: var(--grp-head-spacing);
     text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 700;
-    margin: 46px 0 16px;
+    font-weight: var(--grp-head-weight);
+    color: var(--grp-head-color);
+    margin: 0 0 2px;
     display: flex;
     align-items: center;
     gap: 12px;
   }
-  .sec-title:first-of-type {
-    margin-top: 34px;
-  }
-  .sec-title .n {
-    display: inline-flex;
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    background: linear-gradient(140deg, #ff7c3d, #f2521a);
-    color: var(--paper);
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
+  .grp-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
   }
 
-  .grid {
-    display: grid;
-    gap: 16px;
-  }
-  .cols2 {
-    grid-template-columns: 1fr 1fr;
-  }
-  @media (max-width: 780px) {
-    .cols2 {
-      grid-template-columns: 1fr;
-    }
-  }
-  .row3 {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    gap: 18px;
-  }
-  .row3 .field {
-    margin: 0;
-  }
-  @media (max-width: 780px) {
-    .row3 {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  @media (max-width: 520px) {
-    .row3 {
-      grid-template-columns: 1fr;
-    }
-  }
-  .row2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-  }
-  .row2 .field {
-    margin: 0;
-  }
-  @media (max-width: 560px) {
-    .row2 {
-      grid-template-columns: 1fr;
-    }
-  }
-
+  /* ---- reusable: card ---- */
   .card {
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 22px 24px;
+    border-radius: var(--r-card);
+    padding: var(--pad-card);
   }
-  .card h3 {
-    margin: 0 0 16px;
-    font-weight: 700;
-    font-size: 19px;
-    letter-spacing: -0.01em;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .card.flush {
+    padding: 0;
+    overflow: hidden;
   }
 
+  /* ---- reusable: card title (lives INSIDE the card) ---- */
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: var(--pad-title);
+    border-bottom: 1px solid var(--line);
+  }
+  .card-title .badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: var(--accent-grad);
+    color: var(--paper);
+    font-size: 12px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .card-title h3 {
+    margin: 0;
+    font-size: var(--card-title-size);
+    font-weight: var(--card-title-weight);
+    color: var(--card-title-color);
+    letter-spacing: -0.01em;
+  }
+  .card-title .meta {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .card-body {
+    padding: 18px;
+  }
+  .card-body.pad-top {
+    padding-top: 8px;
+  }
+
+  /* ---- reusable: field / label / input ---- */
   label {
     display: block;
-    font-size: 13px;
-    color: var(--muted);
+    font-size: var(--label-size);
+    color: var(--label-color);
+    font-weight: var(--label-weight);
     margin: 0 0 8px;
-    font-weight: 500;
   }
-  .field {
-    margin: 0 0 18px;
+  .field + .field {
+    margin-top: 16px;
   }
-  .field:last-child {
-    margin-bottom: 0;
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
+  .two label {
+    min-height: 32px;
+  }
+
   .input {
     position: relative;
   }
-  .input span {
+  .input .prefix,
+  .input .suffix {
     position: absolute;
-    left: 15px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--muted);
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
+  }
+  .input .prefix {
+    left: 14px;
+  }
+  .input .suffix {
+    right: 14px;
   }
   input {
     width: 100%;
     background: var(--panel2);
     border: 1px solid var(--line);
-    border-radius: 11px;
+    border-radius: var(--r-input);
     color: var(--ink);
     font-family: var(--font-body);
     font-size: 20px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    padding: 13px 14px 13px 34px;
+    padding: 13px 14px;
     outline: none;
     transition:
       box-shadow 0.12s,
       border-color 0.12s;
+  }
+  .input:has(.prefix) input {
+    padding-left: 32px;
+  }
+  .input:has(.suffix) input {
+    padding-right: 32px;
   }
   input:focus {
     border-color: var(--accent);
@@ -880,14 +926,17 @@
     margin: 0;
   }
 
-  .static-field {
+  .static {
     background: var(--panel2);
     border: 1px solid var(--line);
-    border-radius: 11px;
-    color: var(--ink);
+    border-radius: var(--r-input);
+    color: var(--muted);
     font-size: 17px;
     font-weight: 700;
-    padding: 14px 14px;
+    padding: 14px;
+  }
+  .static.accent {
+    color: var(--accent2);
   }
   .field-note {
     color: var(--muted);
@@ -899,14 +948,12 @@
     color: var(--ink);
     font-weight: 700;
   }
-  .year-field {
-    max-width: 240px;
-  }
+
   select {
     width: 100%;
     background: var(--panel2);
     border: 1px solid var(--line);
-    border-radius: 11px;
+    border-radius: var(--r-input);
     color: var(--ink);
     font-family: var(--font-body);
     font-size: 20px;
@@ -930,16 +977,17 @@
     color: var(--ink);
   }
 
-  .classes {
+  /* ---- reusable: tax-class pills ---- */
+  .pills {
     display: flex;
     gap: 8px;
   }
-  .classes button {
+  .pills button {
     flex: 1;
     background: var(--panel2);
     border: 1px solid var(--line);
     color: var(--ink);
-    border-radius: 10px;
+    border-radius: var(--r-pill);
     padding: 11px 0;
     font-family: var(--font-body);
     font-size: 15px;
@@ -947,8 +995,8 @@
     cursor: pointer;
     transition: 0.12s;
   }
-  .classes button.on {
-    background: linear-gradient(140deg, #ff7c3d, #f2521a);
+  .pills button.on {
+    background: var(--accent-grad);
     border-color: transparent;
     color: var(--paper);
   }
@@ -961,264 +1009,21 @@
     padding: 13px 16px;
     font-size: 14px;
     font-weight: 500;
-    margin: 0 0 16px;
   }
 
-  /* hero blocks */
-  .total {
-    background: linear-gradient(180deg, #23262b, #1c1e22);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 26px 28px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 18px;
-  }
-  .total .lbl {
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  .total .big {
-    font-size: clamp(40px, 6vw, 56px);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-    line-height: 0.98;
-    color: var(--ink);
-  }
-  .total .rates {
-    display: flex;
-    gap: 30px;
-    text-align: right;
-  }
-  .total .rates .lbl {
-    margin-bottom: 5px;
-  }
-  .total .rates b {
-    font-size: 25px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--accent);
-  }
-
-  /* hero summary strip */
-  .hero {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: 1fr;
-    margin-bottom: 16px;
-  }
-  .hero-tile {
-    background: linear-gradient(180deg, #23262b, #1c1e22);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 22px 24px;
-  }
-  .hero-tile .lbl {
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  .hero-tile .big {
-    font-size: clamp(34px, 4.4vw, 46px);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.02;
-    margin-top: 6px;
-  }
-  .hero-tile .sub {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 8px;
-    font-variant-numeric: tabular-nums;
-  }
-  .hero-tile.refund {
-    background: linear-gradient(135deg, #1e3a30, #172a23);
-    border-color: rgba(54, 194, 139, 0.4);
-  }
-  .hero-tile.refund .big {
-    color: var(--good);
-  }
-  .hero-tile.owe {
-    background: linear-gradient(135deg, #3a2420, #2a1a18);
-    border-color: rgba(240, 104, 92, 0.4);
-  }
-  .hero-tile.owe .big {
-    color: var(--bad);
-  }
-
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-top: 16px;
-  }
-  @media (max-width: 780px) {
-    .stats {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  .stat {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 16px 18px;
-  }
-  .stat .k {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 12px;
-    min-height: 30px;
-    line-height: 1.35;
-  }
-  .stat .v {
-    font-size: 24px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-  .stat.cost .v {
-    color: var(--warn);
-  }
-
-  /* tables */
-  .table-scroll {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 15px;
-  }
-  th,
-  td {
-    padding: 13px 14px;
-    text-align: right;
-    border-bottom: 1px solid var(--line);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  th {
-    color: var(--muted);
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  td:first-child,
-  th:first-child {
-    text-align: left;
-  }
-  td {
-    color: var(--ink);
-    font-weight: 500;
-  }
-  tr.net td {
-    font-weight: 800;
-    border-bottom: none;
-    background: rgba(255, 107, 44, 0.12);
-  }
-  .cls-pill {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent2);
-    border: 1px solid rgba(255, 162, 77, 0.5);
-    border-radius: 6px;
-    padding: 1px 7px;
-    margin-left: 8px;
-  }
-
-  /* reconciliation */
-  .recon {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 18px;
-  }
-  .recon .leg {
-    flex: 1;
-    min-width: 170px;
-  }
-  .recon .leg .lbl {
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 7px;
-    font-weight: 600;
-  }
-  .recon .leg .v {
-    font-size: 27px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-  .recon .arrow {
-    color: var(--muted);
-    font-size: 20px;
-    font-style: italic;
-  }
-  .balance {
-    border-radius: 14px;
-    padding: 18px 22px;
-    text-align: right;
-    min-width: 210px;
-    border: 1px solid var(--line);
-  }
-  .balance.refund {
-    background: rgba(54, 194, 139, 0.12);
-    border-color: rgba(54, 194, 139, 0.4);
-  }
-  .balance.owe {
-    background: rgba(240, 104, 92, 0.12);
-    border-color: rgba(240, 104, 92, 0.4);
-  }
-  .balance .lbl {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 7px;
-    font-weight: 600;
-  }
-  .balance .v {
-    font-size: 31px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-  .balance.refund .v {
-    color: var(--good);
-  }
-  .balance.owe .v {
-    color: var(--bad);
-  }
-  .recon-note {
-    color: var(--muted);
-    font-size: 13px;
-    margin: 16px 0 0;
-    line-height: 1.65;
-  }
-
-  /* fine-tuner */
+  /* ---- reusable: slider ---- */
   .tuner-row {
     display: flex;
     gap: 16px;
     align-items: center;
   }
+  .tuner-row .input {
+    width: 150px;
+    flex: none;
+  }
   input[type='range'] {
     flex: 1;
+    width: auto;
     -webkit-appearance: none;
     appearance: none;
     height: 8px;
@@ -1234,7 +1039,7 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: linear-gradient(140deg, #ff7c3d, #f2521a);
+    background: var(--accent-grad);
     border: none;
     cursor: pointer;
   }
@@ -1242,22 +1047,226 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: linear-gradient(140deg, #ff7c3d, #f2521a);
+    background: var(--accent-grad);
     border: none;
     cursor: pointer;
   }
   input[type='range']:focus {
     box-shadow: 0 0 0 3px rgba(255, 107, 44, 0.18);
   }
-  tr.cur td {
-    background: rgba(255, 107, 44, 0.1);
+
+  /* ---- reusable: hero tiles ---- */
+  .hero {
+    display: grid;
+    gap: var(--grid-gap);
+    grid-template-columns: 1fr;
   }
-  tr.cur td:first-child {
-    font-weight: 800;
+  .tile {
+    background: linear-gradient(180deg, #23262b, #1c1e22);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 24px;
   }
-  .recommend {
-    color: var(--accent);
+  .tile .lbl {
+    font-size: var(--tile-lbl-size);
+    letter-spacing: var(--tile-lbl-spacing);
+    text-transform: uppercase;
+    color: var(--tile-lbl-color);
     font-weight: 700;
+  }
+  .tile .big {
+    font-size: clamp(34px, 4.4vw, 46px);
+    font-weight: var(--big-weight);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-top: 6px;
+  }
+  .tile .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .tile.refund {
+    background: linear-gradient(135deg, #1e3a30, #172a23);
+    border-color: rgba(54, 194, 139, 0.4);
+  }
+  .tile.refund .big {
+    color: var(--good);
+  }
+  .tile.owe {
+    background: linear-gradient(135deg, #3a2420, #2a1a18);
+    border-color: rgba(240, 104, 92, 0.4);
+  }
+  .tile.owe .big {
+    color: var(--bad);
+  }
+
+  /* ---- reusable: results grid + big number + caption ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--grid-gap);
+    align-items: start;
+  }
+  .big {
+    font-size: var(--big-size);
+    font-weight: var(--big-weight);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .caption {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .caption b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* ---- reusable: stat tiles ---- */
+  .statrow {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .statrow.c2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .statrow.c3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .stat {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 13px 14px;
+  }
+  .stat .k {
+    font-size: var(--stat-k-size);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-height: 28px;
+    line-height: 1.3;
+  }
+  .stat .v {
+    font-size: var(--stat-v-size);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-top: 6px;
+  }
+  .stat .v.accent {
+    color: var(--accent);
+  }
+  .stat .v.good {
+    color: var(--good);
+  }
+  .stat .v.warn {
+    color: var(--warn);
+  }
+  .stat .v.bad {
+    color: var(--bad);
+  }
+
+  /* ---- reusable: tables ---- */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+  th,
+  td {
+    padding: 12px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  th {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  td:first-child,
+  th:first-child {
+    text-align: left;
+    color: var(--muted);
+  }
+  td {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  tr.net td {
+    font-weight: 800;
+    border-bottom: none;
+    background: rgba(255, 107, 44, 0.12);
+    color: var(--ink);
+  }
+  .cls-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent2);
+    border: 1px solid rgba(255, 162, 77, 0.5);
+    border-radius: 6px;
+    padding: 1px 7px;
+    margin-left: 6px;
+  }
+
+  /* ---- reusable: balance block + notes ---- */
+  .balance {
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    margin-top: 12px;
+  }
+  .balance.refund {
+    background: rgba(54, 194, 139, 0.12);
+    border-color: rgba(54, 194, 139, 0.4);
+  }
+  .balance.owe {
+    background: rgba(240, 104, 92, 0.12);
+    border-color: rgba(240, 104, 92, 0.4);
+  }
+  .balance .k {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .balance .v {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-top: 5px;
+  }
+  .balance.refund .v {
+    color: var(--good);
+  }
+  .balance.owe .v {
+    color: var(--bad);
+  }
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 14px 0 0;
+    line-height: 1.6;
+  }
+  .callout {
+    margin: 14px 0 0;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 10px 13px;
+    font-size: 12.5px;
+    color: var(--accent2);
   }
 
   .assumptions {
@@ -1273,7 +1282,7 @@
     font-weight: 700;
   }
 
-  /* cookie consent */
+  /* ---- cookie consent ---- */
   .cookie-bar {
     position: fixed;
     left: 16px;
@@ -1325,12 +1334,44 @@
     color: var(--ink);
   }
   .cookie-actions .primary {
-    background: linear-gradient(140deg, #ff7c3d, #f2521a);
+    background: var(--accent-grad);
     border-color: transparent;
     color: var(--paper);
   }
 
-  /* phones */
+  /* ===================== wide screens: two-pane ===================== */
+  @media (min-width: 960px) {
+    .panes {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .rail {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+    }
+    .results {
+      margin-top: 0;
+    }
+    .hero {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .grid .span2 {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (min-width: 960px) and (max-width: 1180px) {
+    .panes {
+      grid-template-columns: 380px 1fr;
+    }
+  }
+
+  /* ===================== phones ===================== */
   @media (max-width: 560px) {
     :global(body) {
       padding: 30px 14px 110px;
@@ -1338,47 +1379,23 @@
     .lede {
       font-size: 16px;
     }
-    .sec-title {
-      margin: 34px 0 14px;
+    .card-body {
+      padding: 16px;
     }
-    .card {
-      padding: 18px 16px;
-    }
-    .total {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 16px;
-      padding: 20px;
-    }
-    .total .rates {
-      width: 100%;
-      justify-content: space-between;
-      text-align: left;
-      gap: 16px;
+    .statrow.c3 {
+      grid-template-columns: 1fr 1fr;
     }
     th,
     td {
       padding: 10px 11px;
       font-size: 13px;
     }
-    .recon {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 14px;
-    }
-    .recon .arrow {
-      display: none;
-    }
-    .balance {
-      min-width: 0;
-      text-align: left;
-    }
     .tuner-row {
       flex-direction: column;
       align-items: stretch;
     }
     .tuner-row .input {
-      width: 100% !important;
+      width: 100%;
     }
     input[type='range'] {
       width: 100%;
@@ -1394,49 +1411,6 @@
     }
     .cookie-actions button {
       flex: 1;
-    }
-  }
-
-  /* wide screens: two-pane dashboard */
-  @media (min-width: 960px) {
-    .panes {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 32px;
-      align-items: start;
-      margin-top: 8px;
-    }
-    .rail {
-      position: sticky;
-      top: 24px;
-      align-self: start;
-    }
-    .rail .sec-title:first-child {
-      margin-top: 0;
-    }
-    .results {
-      min-width: 0;
-    }
-    .hero {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
-    .dash {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px 20px;
-      align-items: start;
-    }
-    .dash-cell {
-      min-width: 0;
-    }
-    .dash-cell .sec-title {
-      margin-top: 0;
-      margin-bottom: 14px;
-    }
-  }
-  @media (min-width: 960px) and (max-width: 1180px) {
-    .panes {
-      grid-template-columns: 320px 1fr;
     }
   }
 </style>
