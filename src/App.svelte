@@ -262,9 +262,36 @@
     </div>
   </div>
 
+  <!-- ============ CAPITAL INCOME ============ -->
+  <div class="sec-title">
+    <span class="n">4</span> Australian bank interest — capital income (taxed separately, flat 25%)
+  </div>
+  <div class="card">
+    <div class="field" style="max-width:380px; margin-bottom:20px">
+      <label>Australian bank interest received (gross, in €)</label>
+      <div class="input">
+        <span>€</span><input type="number" inputmode="numeric" min="0" step="500" bind:value={interest} />
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <tbody>
+          <tr><td>Gross interest</td><td>{eur(r.cap.interest)}</td></tr>
+          <tr><td>− Sparer-Pauschbetrag (married)</td><td>− {eur(Math.min(r.cap.interest, 2000))}</td></tr>
+          <tr><td>= Taxable in Germany</td><td>{eur(r.cap.taxable)}</td></tr>
+          <tr><td>Abgeltungsteuer (25%)</td><td>{eur(r.cap.abgGross)}</td></tr>
+          <tr><td>− Australian tax credited (10%)</td><td>− {eur(r.cap.auCredit)}</td></tr>
+          <tr><td>+ Soli (5.5%)</td><td>+ {eur(r.cap.soliInt)}</td></tr>
+          <tr class="net"><td>German tax due on the interest</td><td>{eur(r.cap.germanDue)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    {#if iNote}<p class="recon-note">{iNote}</p>{/if}
+  </div>
+
   <!-- ============ ANNUAL INCOME TAX ============ -->
   <div class="sec-title">
-    <span class="n">4</span> Annual income tax — the truth (tax classes don't change this)
+    <span class="n">5</span> Annual income tax — the truth (tax classes don't change this)
   </div>
   <div class="total">
     <div>
@@ -303,33 +330,6 @@
       <div class="k">Special rate applied (bes. Steuersatz)</div>
       <div class="v">{pct(r.specialRate)}</div>
     </div>
-  </div>
-
-  <!-- ============ CAPITAL INCOME ============ -->
-  <div class="sec-title">
-    <span class="n">5</span> Australian bank interest — capital income (taxed separately, flat 25%)
-  </div>
-  <div class="card">
-    <div class="field" style="max-width:380px; margin-bottom:20px">
-      <label>Australian bank interest received (gross, in €)</label>
-      <div class="input">
-        <span>€</span><input type="number" inputmode="numeric" min="0" step="500" bind:value={interest} />
-      </div>
-    </div>
-    <div class="table-scroll">
-      <table>
-        <tbody>
-          <tr><td>Gross interest</td><td>{eur(r.cap.interest)}</td></tr>
-          <tr><td>− Sparer-Pauschbetrag (married)</td><td>− {eur(Math.min(r.cap.interest, 2000))}</td></tr>
-          <tr><td>= Taxable in Germany</td><td>{eur(r.cap.taxable)}</td></tr>
-          <tr><td>Abgeltungsteuer (25%)</td><td>{eur(r.cap.abgGross)}</td></tr>
-          <tr><td>− Australian tax credited (10%)</td><td>− {eur(r.cap.auCredit)}</td></tr>
-          <tr><td>+ Soli (5.5%)</td><td>+ {eur(r.cap.soliInt)}</td></tr>
-          <tr class="net"><td>German tax due on the interest</td><td>{eur(r.cap.germanDue)}</td></tr>
-        </tbody>
-      </table>
-    </div>
-    {#if iNote}<p class="recon-note">{iNote}</p>{/if}
   </div>
 
   <!-- ============ GRAND TOTAL ============ -->
