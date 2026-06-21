@@ -75,13 +75,22 @@ describe('App.svelte', () => {
 
   it('breaks out health insurance and shows net income', () => {
     render(App)
-    // health + care insurance now have their own lines in the take-home table
+    // health + care insurance still have their own lines in the take-home table
     expect(screen.getByText(/Health insurance \(KV\)/i)).toBeTruthy()
     expect(screen.getByText(/Care insurance \(PV\)/i)).toBeTruthy()
-    // the combined monthly net income is surfaced
-    expect(screen.getByText(/Combined net income \/ month/i)).toBeTruthy()
+    // net income is surfaced in the hero strip
+    expect(screen.getByText(/Net income \/ month/i)).toBeTruthy()
     const expected = eur((calculate(DEFAULTS).p1.netA + calculate(DEFAULTS).p2.netA) / 12)
     expect(screen.getAllByText(expected).length).toBeGreaterThan(0)
+  })
+
+  it('shows the hero summary strip', () => {
+    const { container } = render(App)
+    const hero = container.querySelector('.hero')
+    expect(hero).toBeTruthy()
+    expect(hero?.textContent).toMatch(/Total German tax/)
+    expect(hero?.textContent).toMatch(/Net income \/ month/)
+    expect(hero?.textContent).toMatch(/Year-end balance/)
   })
 
   it('has a dedicated Denkmal card that shows the payable tax', () => {
