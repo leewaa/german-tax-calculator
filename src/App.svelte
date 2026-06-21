@@ -416,7 +416,16 @@
                 </tbody>
               </table>
             </div>
-            {#if iNote}<p class="note">{iNote}</p>{/if}
+            {#if iNote}
+              <p class="note">{iNote}</p>
+            {:else}
+              <p class="note">
+                Australian bank interest is taxed <b>separately</b> from your salary — a flat 25% Abgeltungsteuer
+                plus 5.5% Soli, after the €2,000 saver's allowance, with the 10% Australian treaty withholding credited
+                against it. It never touches your salary's tax rate. Enter an amount on the left to see the German
+                tax due.
+              </p>
+            {/if}
           </div>
         </article>
 
@@ -447,7 +456,12 @@
                 </div>
               </div>
             </div>
-            <p class="callout">Drag the deductions slider on the left to see this update.</p>
+            <p class="note">
+              Additional deductions lower your <b>taxable income</b> before the §32a tariff is applied, so
+              every euro you deduct saves tax at your <b>marginal rate</b> ({pct(r.marginal)}) — not your
+              lower average rate. Drag the deductions slider on the left and the saving, new total and
+              year-end balance all update here.
+            </p>
           </div>
         </article>
 
@@ -510,6 +524,11 @@
                 <div class="v">{eur(r.zvE)}</div>
               </div>
             </div>
+            <p class="note">
+              This is your <b>true annual income tax</b> (Lohnsteuer + Soli) — the figure your tax return
+              settles to, identical whichever tax classes you choose. The <b>effective rate</b> is the average
+              across all your taxable income; the <b>marginal rate</b> is what the next euro you earn is taxed at.
+            </p>
           </div>
         </article>
 
@@ -599,6 +618,12 @@
                 <div class="v">{eur(annualHealth)}</div>
               </div>
             </div>
+            <p class="note">
+              What actually lands in your accounts: gross less pension &amp; unemployment, statutory health
+              and care insurance, and income tax (incl. Soli). Your <b>tax classes</b> shift how the monthly withholding
+              splits between the two of you — and whether you over- or under-pay during the year — but never the
+              annual total above.
+            </p>
           </div>
         </article>
       </div>
@@ -1121,20 +1146,12 @@
     gap: var(--grid-gap);
     align-items: stretch;
   }
-  /* Cards in the same row stretch to equal height; their inner notes/callouts
-     sink to the bottom so card footers line up instead of leaving grey gaps. */
+  /* Cards in the same row stretch to equal height. Each card carries a real
+     explanatory paragraph so paired cards balance in height naturally and
+     content flows tight under the stats (no mid-card grey gaps). */
   .grid .card.flush {
     display: flex;
     flex-direction: column;
-  }
-  .grid .card.flush .card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  .grid .card.flush .card-body .note,
-  .grid .card.flush .card-body .callout {
-    margin-top: auto;
   }
   .big {
     font-size: var(--big-size);
