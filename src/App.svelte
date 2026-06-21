@@ -689,7 +689,7 @@
     padding: 52px 20px 96px;
   }
   .wrap {
-    max-width: 980px;
+    max-width: 1600px;
     margin: 0 auto;
   }
   .wrap > * {
@@ -1006,18 +1006,53 @@
     color: var(--accent);
   }
 
-  .net-banner {
-    background: linear-gradient(135deg, #ff7c3d, #ee4f18);
-    border-color: transparent;
+  /* hero summary strip */
+  .hero {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1fr;
+    margin-bottom: 16px;
   }
-  .net-banner .lbl {
-    color: rgba(26, 18, 5, 0.66);
+  .hero-tile {
+    background: linear-gradient(180deg, #23262b, #1c1e22);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 24px;
   }
-  .net-banner .big {
-    color: var(--paper);
+  .hero-tile .lbl {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
   }
-  .net-banner .rates b {
-    color: var(--paper);
+  .hero-tile .big {
+    font-size: clamp(34px, 4.4vw, 46px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.02;
+    margin-top: 6px;
+  }
+  .hero-tile .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-tile.refund {
+    background: linear-gradient(135deg, #1e3a30, #172a23);
+    border-color: rgba(54, 194, 139, 0.4);
+  }
+  .hero-tile.refund .big {
+    color: var(--good);
+  }
+  .hero-tile.owe {
+    background: linear-gradient(135deg, #3a2420, #2a1a18);
+    border-color: rgba(240, 104, 92, 0.4);
+  }
+  .hero-tile.owe .big {
+    color: var(--bad);
   }
 
   .stats {
@@ -1359,6 +1394,49 @@
     }
     .cookie-actions button {
       flex: 1;
+    }
+  }
+
+  /* wide screens: two-pane dashboard */
+  @media (min-width: 960px) {
+    .panes {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 32px;
+      align-items: start;
+      margin-top: 8px;
+    }
+    .rail {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+    }
+    .rail .sec-title:first-child {
+      margin-top: 0;
+    }
+    .results {
+      min-width: 0;
+    }
+    .hero {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .dash {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 20px;
+      align-items: start;
+    }
+    .dash-cell {
+      min-width: 0;
+    }
+    .dash-cell .sec-title {
+      margin-top: 0;
+      margin-bottom: 14px;
+    }
+  }
+  @media (min-width: 960px) and (max-width: 1180px) {
+    .panes {
+      grid-template-columns: 320px 1fr;
     }
   }
 </style>
