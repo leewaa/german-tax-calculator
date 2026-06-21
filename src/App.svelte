@@ -689,10 +689,12 @@
 
     --font-body: 'Hanken Grotesk Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-    /* radii */
-    --r-card: 16px;
-    --r-input: 11px;
-    --r-pill: 10px;
+    /* radii — kept tight for a flatter, less rounded look */
+    --r-card: 8px;
+    --r-input: 6px;
+    --r-pill: 6px;
+    --r-badge: 5px;
+    --r-chip: 5px;
 
     /* spacing rhythm */
     --rail-gap: 22px; /* between input groups */
@@ -782,7 +784,7 @@
     color: var(--accent);
     border: 1px solid var(--line);
     padding: 7px 14px;
-    border-radius: 999px;
+    border-radius: var(--r-chip);
     background: rgba(255, 107, 44, 0.07);
   }
   h1 {
@@ -864,7 +866,7 @@
   .card-title .badge {
     width: 22px;
     height: 22px;
-    border-radius: 7px;
+    border-radius: var(--r-badge);
     background: var(--accent-grad);
     color: var(--paper);
     font-size: 12px;
@@ -1043,7 +1045,7 @@
     background: rgba(224, 162, 58, 0.12);
     border: 1px solid rgba(224, 162, 58, 0.4);
     color: #f0cb86;
-    border-radius: 12px;
+    border-radius: var(--r-input);
     padding: 13px 16px;
     font-size: 14px;
     font-weight: 500;
@@ -1102,7 +1104,7 @@
   .tile {
     background: linear-gradient(180deg, #23262b, #1c1e22);
     border: 1px solid var(--line);
-    border-radius: 18px;
+    border-radius: var(--r-card);
     padding: 22px 24px;
   }
   .tile .lbl {
@@ -1184,7 +1186,7 @@
   .stat {
     background: var(--panel2);
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: var(--r-input);
     padding: 13px 14px;
   }
   .stat .k {
@@ -1259,14 +1261,14 @@
     font-weight: 700;
     color: var(--accent2);
     border: 1px solid rgba(255, 162, 77, 0.5);
-    border-radius: 6px;
+    border-radius: var(--r-chip);
     padding: 1px 7px;
     margin-left: 6px;
   }
 
   /* ---- reusable: balance block + notes ---- */
   .balance {
-    border-radius: 12px;
+    border-radius: var(--r-input);
     padding: 14px 16px;
     border: 1px solid var(--line);
     margin-top: 12px;
@@ -1312,7 +1314,7 @@
     margin: 14px 0 0;
     background: rgba(255, 255, 255, 0.02);
     border: 1px dashed var(--line);
-    border-radius: 10px;
+    border-radius: var(--r-input);
     padding: 10px 13px;
     font-size: 12.5px;
     color: var(--accent2);
@@ -1346,7 +1348,7 @@
     justify-content: space-between;
     background: #1f2226;
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: var(--r-card);
     padding: 16px 20px;
     z-index: 50;
   }
@@ -1366,7 +1368,7 @@
     gap: 10px;
   }
   .cookie-actions button {
-    border-radius: 10px;
+    border-radius: var(--r-input);
     padding: 11px 20px;
     font-family: var(--font-body);
     font-size: 14px;
