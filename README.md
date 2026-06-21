@@ -1,7 +1,7 @@
 # German Tax Calculator (Progressionsvorbehalt)
 
 A single-page, client-side estimator for German income tax (2024, married/jointly) when
-Australian rental income lifts the rate via *Progressionsvorbehalt* — plus tax classes,
+Australian rental income lifts the rate via _Progressionsvorbehalt_ — plus tax classes,
 statutory health insurance, children, Australian bank interest, freelance income, and a
 fine-tuner (extra deductions + Denkmal-AfA).
 
@@ -13,7 +13,10 @@ no data is sent anywhere.
 ```sh
 npm install
 npm run dev      # dev server with hot reload
-npm test         # tax self-checks + legacy-parity + component tests
+npm run lint     # ESLint + Prettier (check)
+npm run format   # auto-fix formatting with Prettier
+npm run check    # svelte-check + tsc type-check
+npm test         # tax self-checks + storage + component tests
 npm run build    # static output in dist/
 npm run preview  # serve the production build locally
 ```
@@ -31,7 +34,8 @@ no UI dependency — and is covered three ways:
 
 `src/App.svelte` is presentation only — it imports `calculate()` and renders the result.
 
-## Deploy
+## CI / Deploy
 
-Pushing to `main` triggers a GitHub Actions workflow that tests, builds, and publishes to
-GitHub Pages.
+- **Pull requests & branches** run `.github/workflows/ci.yml` — lint, type-check, test, build.
+- **Push to `main`** runs `.github/workflows/deploy.yml` — the same gate (lint → check → test →
+  build), then publishes to GitHub Pages only if all of it passes.

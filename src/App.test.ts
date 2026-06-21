@@ -24,9 +24,17 @@ const eur = (n: number) =>
 // The component's hard-coded defaults (must match App.svelte's $state initial values).
 const DEFAULTS: HouseholdInput = {
   year: 2024,
-  grossYou: 70000, classYou: 'III', grossWife: 35000, classWife: 'V',
-  ausRent: 12000, zusatzPct: 1.7, kids: 0, interest: 3000,
-  freelance: 0, deductions: 0, denkmalCost: 0,
+  grossYou: 70000,
+  classYou: 'III',
+  grossWife: 35000,
+  classWife: 'V',
+  ausRent: 12000,
+  zusatzPct: 1.7,
+  kids: 0,
+  interest: 3000,
+  freelance: 0,
+  deductions: 0,
+  denkmalCost: 0,
 }
 
 describe('App.svelte', () => {
@@ -90,8 +98,9 @@ describe('App.svelte', () => {
     const expected = eur(calculate({ ...DEFAULTS, year: 2026 }).grandTotal)
     expect(screen.getAllByText(expected).length).toBeGreaterThan(0)
     // the 2026 total differs from the 2024 default total
-    expect(eur(calculate({ ...DEFAULTS, year: 2026 }).grandTotal))
-      .not.toBe(eur(calculate(DEFAULTS).grandTotal))
+    expect(eur(calculate({ ...DEFAULTS, year: 2026 }).grandTotal)).not.toBe(
+      eur(calculate(DEFAULTS).grandTotal),
+    )
   })
 
   it('does not store the form when declined', async () => {

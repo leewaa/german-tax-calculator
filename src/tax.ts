@@ -7,31 +7,60 @@ export type TaxYear = 2023 | 2024 | 2025 | 2026
 
 export interface HouseholdInput {
   year: TaxYear
-  grossYou: number; classYou: TaxClass
-  grossWife: number; classWife: TaxClass
-  ausRent: number; zusatzPct: number; kids: number
-  interest: number; freelance: number
-  deductions: number; denkmalCost: number
+  grossYou: number
+  classYou: TaxClass
+  grossWife: number
+  classWife: TaxClass
+  ausRent: number
+  zusatzPct: number
+  kids: number
+  interest: number
+  freelance: number
+  deductions: number
+  denkmalCost: number
 }
 export interface PersonResult {
-  g: number; cls: TaxClass; ls: number; slz: number
-  svA: number; netA: number; withheld: number
+  g: number
+  cls: TaxClass
+  ls: number
+  slz: number
+  svA: number
+  netA: number
+  withheld: number
   rvAlv: number // pension + unemployment (employee share)
-  kv: number    // statutory health insurance (employee share)
-  pv: number    // statutory care insurance (employee share)
+  kv: number // statutory health insurance (employee share)
+  pv: number // statutory care insurance (employee share)
 }
 export interface CapitalIncomeResult {
-  interest: number; taxable: number; abgGross: number; auWHT: number
-  auCredit: number; abgNet: number; soliInt: number; germanDue: number
+  interest: number
+  taxable: number
+  abgGross: number
+  auWHT: number
+  auCredit: number
+  abgNet: number
+  soliInt: number
+  germanDue: number
 }
 export interface TaxResult {
-  zvE: number; specialRate: number; incomeTax: number; taxNoRent: number
-  costOfRent: number; annualSoli: number; annualTotal: number
-  marginal: number; effective: number
-  p1: PersonResult; p2: PersonResult
-  withheld: number; balance: number; combined: number
-  cap: CapitalIncomeResult; grandTotal: number
-  freelance: number; freelanceTax: number; denkmalAfA: number
+  zvE: number
+  specialRate: number
+  incomeTax: number
+  taxNoRent: number
+  costOfRent: number
+  annualSoli: number
+  annualTotal: number
+  marginal: number
+  effective: number
+  p1: PersonResult
+  p2: PersonResult
+  withheld: number
+  balance: number
+  combined: number
+  cap: CapitalIncomeResult
+  grandTotal: number
+  freelance: number
+  freelanceTax: number
+  denkmalAfA: number
 }
 
 /* ---------- per-year constants ----------
@@ -43,33 +72,98 @@ export interface TaxResult {
  */
 interface YearConfig {
   gfb: number
-  z2a: number; z2hi: number
-  z3c: number; z3e: number; z3hi: number
-  z4f: number; z5g: number
-  bbgRV: number; bbgKV: number
+  z2a: number
+  z2hi: number
+  z3c: number
+  z3e: number
+  z3hi: number
+  z4f: number
+  z5g: number
+  bbgRV: number
+  bbgKV: number
   soliSingle: number // Soli Freigrenze (single); joint assessment uses 2× this
-  kfb: number        // Kinderfreibetrag incl. BEA, full amount for the couple, per child
-  pvBase: number     // employee Pflegeversicherung base rate (before childless surcharge)
+  kfb: number // Kinderfreibetrag incl. BEA, full amount for the couple, per child
+  pvBase: number // employee Pflegeversicherung base rate (before childless surcharge)
 }
 
 const YEARS: Record<TaxYear, YearConfig> = {
-  2023: { gfb: 10908, z2a: 979.18, z2hi: 15999, z3c: 192.59, z3e: 966.53, z3hi: 62809, z4f: 9972.98, z5g: 18307.73, bbgRV: 87600, bbgKV: 59850, soliSingle: 17543, kfb: 8952, pvBase: 0.017 },
-  2024: { gfb: 11604, z2a: 922.98, z2hi: 17005, z3c: 181.19, z3e: 1025.38, z3hi: 66760, z4f: 10602.13, z5g: 18936.88, bbgRV: 90600, bbgKV: 62100, soliSingle: 18130, kfb: 9312, pvBase: 0.017 },
-  2025: { gfb: 12096, z2a: 932.30, z2hi: 17443, z3c: 176.64, z3e: 1015.13, z3hi: 68480, z4f: 10911.92, z5g: 19246.67, bbgRV: 96600, bbgKV: 66150, soliSingle: 19950, kfb: 9600, pvBase: 0.018 },
-  2026: { gfb: 12348, z2a: 914.51, z2hi: 17799, z3c: 173.10, z3e: 1034.87, z3hi: 69878, z4f: 11135.63, z5g: 19470.38, bbgRV: 101400, bbgKV: 69750, soliSingle: 20350, kfb: 9756, pvBase: 0.018 },
+  2023: {
+    gfb: 10908,
+    z2a: 979.18,
+    z2hi: 15999,
+    z3c: 192.59,
+    z3e: 966.53,
+    z3hi: 62809,
+    z4f: 9972.98,
+    z5g: 18307.73,
+    bbgRV: 87600,
+    bbgKV: 59850,
+    soliSingle: 17543,
+    kfb: 8952,
+    pvBase: 0.017,
+  },
+  2024: {
+    gfb: 11604,
+    z2a: 922.98,
+    z2hi: 17005,
+    z3c: 181.19,
+    z3e: 1025.38,
+    z3hi: 66760,
+    z4f: 10602.13,
+    z5g: 18936.88,
+    bbgRV: 90600,
+    bbgKV: 62100,
+    soliSingle: 18130,
+    kfb: 9312,
+    pvBase: 0.017,
+  },
+  2025: {
+    gfb: 12096,
+    z2a: 932.3,
+    z2hi: 17443,
+    z3c: 176.64,
+    z3e: 1015.13,
+    z3hi: 68480,
+    z4f: 10911.92,
+    z5g: 19246.67,
+    bbgRV: 96600,
+    bbgKV: 66150,
+    soliSingle: 19950,
+    kfb: 9600,
+    pvBase: 0.018,
+  },
+  2026: {
+    gfb: 12348,
+    z2a: 914.51,
+    z2hi: 17799,
+    z3c: 173.1,
+    z3e: 1034.87,
+    z3hi: 69878,
+    z4f: 11135.63,
+    z5g: 19470.38,
+    bbgRV: 101400,
+    bbgKV: 69750,
+    soliSingle: 20350,
+    kfb: 9756,
+    pvBase: 0.018,
+  },
 }
 
 export const TAX_YEARS: TaxYear[] = [2023, 2024, 2025, 2026]
 
 /* year-stable constants */
-const RV = 0.093, ALV = 0.013      // employee shares of pension + unemployment insurance
-const KV_BASE = 0.073              // employee health-insurance base (half of 14.6%)
-const AN_PB = 1230, SO_PB = 36     // Arbeitnehmer- + Sonderausgaben-Pauschbetrag (since 2023)
-const SPB_MARRIED = 2000, ABG = 0.25, AU_WHT = 0.10
+const RV = 0.093,
+  ALV = 0.013 // employee shares of pension + unemployment insurance
+const KV_BASE = 0.073 // employee health-insurance base (half of 14.6%)
+const AN_PB = 1230,
+  SO_PB = 36 // Arbeitnehmer- + Sonderausgaben-Pauschbetrag (since 2023)
+const SPB_MARRIED = 2000,
+  ABG = 0.25,
+  AU_WHT = 0.1
 const DENKMAL_RATE = 0.09
 
 // Employee health-insurance rate: base + half the Zusatzbeitrag (employer pays the other half).
-export const kvRate = (zusatzPct: number): number => KV_BASE + (zusatzPct / 100) / 2
+export const kvRate = (zusatzPct: number): number => KV_BASE + zusatzPct / 100 / 2
 // Employee care-insurance rate: base (1.7%/1.8%) + 0.6% childless surcharge; −0.25%/child for kids 2–5.
 export const pvRate = (kids: number, year: TaxYear): number => {
   const base = YEARS[year].pvBase
@@ -82,8 +176,14 @@ export function grundtarif(x: number, year: TaxYear): number {
   const c = YEARS[year]
   x = Math.floor(x)
   if (x <= c.gfb) return 0
-  if (x <= c.z2hi) { const y = (x - c.gfb) / 10000; return Math.floor((c.z2a * y + 1400) * y) }
-  if (x <= c.z3hi) { const z = (x - c.z2hi) / 10000; return Math.floor((c.z3c * z + 2397) * z + c.z3e) }
+  if (x <= c.z2hi) {
+    const y = (x - c.gfb) / 10000
+    return Math.floor((c.z2a * y + 1400) * y)
+  }
+  if (x <= c.z3hi) {
+    const z = (x - c.z2hi) / 10000
+    return Math.floor((c.z3c * z + 2397) * z + c.z3e)
+  }
   if (x <= 277825) return Math.floor(0.42 * x - c.z4f)
   return Math.floor(0.45 * x - c.z5g)
 }
@@ -128,7 +228,7 @@ export function lohnsteuer(X: number, cls: TaxClass, year: TaxYear): number {
 }
 export const soli = (tax: number, kind: TaxClass | 'joint', year: TaxYear): number => {
   const single = YEARS[year].soliSingle
-  const fg = (kind === 'joint' || kind === 'III') ? 2 * single : single
+  const fg = kind === 'joint' || kind === 'III' ? 2 * single : single
   if (tax <= fg) return 0
   return Math.min(0.119 * (tax - fg), 0.055 * tax)
 }
@@ -151,8 +251,10 @@ export function capitalIncomeTax(interest: number): CapitalIncomeResult {
 /* ---------- full calculation ---------- */
 export function calculate(input: HouseholdInput): TaxResult {
   const year = input.year
-  const g1 = Math.max(0, input.grossYou || 0), c1 = input.classYou
-  const g2 = Math.max(0, input.grossWife || 0), c2 = input.classWife
+  const g1 = Math.max(0, input.grossYou || 0),
+    c1 = input.classYou
+  const g2 = Math.max(0, input.grossWife || 0),
+    c2 = input.classWife
   const ausRent = Math.max(0, input.ausRent || 0)
   const zus = Math.max(0, input.zusatzPct || 0)
   const kids = Math.max(0, Math.floor(input.kids || 0))
@@ -162,7 +264,8 @@ export function calculate(input: HouseholdInput): TaxResult {
   const denkmalCost = Math.max(0, input.denkmalCost || 0)
 
   const denkmalAfA = Math.round(DENKMAL_RATE * denkmalCost)
-  const X1 = taxableWage(g1, zus, kids, year), X2 = taxableWage(g2, zus, kids, year)
+  const X1 = taxableWage(g1, zus, kids, year),
+    X2 = taxableWage(g2, zus, kids, year)
   const zvE = Math.max(0, X1 + X2 + freelance - deductions - denkmalAfA)
   const totalKFB = kids * YEARS[year].kfb
 
@@ -172,13 +275,15 @@ export function calculate(input: HouseholdInput): TaxResult {
   const taxNoRent = splittingTax(zvE, year)
   const costOfRent = Math.max(0, incomeTax - taxNoRent)
 
-  const zvE0 = Math.max(0, X1 + X2 - deductions - denkmalAfA), comb0 = zvE0 + ausRent
+  const zvE0 = Math.max(0, X1 + X2 - deductions - denkmalAfA),
+    comb0 = zvE0 + ausRent
   const rate0 = comb0 > 0 ? splittingTax(comb0, year) / comb0 : 0
   const freelanceTax = Math.max(0, incomeTax - Math.floor(rate0 * zvE0))
   const soliBaseTax = Math.floor(specialRate * Math.max(0, zvE - totalKFB))
   const annualSoli = Math.round(soli(soliBaseTax, 'joint', year))
   const annualTotal = incomeTax + annualSoli
-  const marginal = combined > 0 ? (splittingTax(combined + 100, year) - splittingTax(combined, year)) / 100 : 0
+  const marginal =
+    combined > 0 ? (splittingTax(combined + 100, year) - splittingTax(combined, year)) / 100 : 0
   const effective = zvE > 0 ? annualTotal / zvE : 0
 
   const cfg = YEARS[year]
@@ -193,7 +298,8 @@ export function calculate(input: HouseholdInput): TaxResult {
     const netA = g - svA - ls - slz
     return { g, cls, ls, slz, svA, netA, withheld: ls + slz, rvAlv, kv, pv }
   }
-  const p1 = person(g1, X1, c1), p2 = person(g2, X2, c2)
+  const p1 = person(g1, X1, c1),
+    p2 = person(g2, X2, c2)
 
   const withheld = p1.withheld + p2.withheld
   const balance = withheld - annualTotal
@@ -202,8 +308,24 @@ export function calculate(input: HouseholdInput): TaxResult {
   const grandTotal = annualTotal + cap.germanDue
 
   return {
-    zvE, specialRate, incomeTax, taxNoRent, costOfRent, annualSoli, annualTotal,
-    marginal, effective, p1, p2, withheld, balance, combined, cap, grandTotal,
-    freelance, freelanceTax, denkmalAfA,
+    zvE,
+    specialRate,
+    incomeTax,
+    taxNoRent,
+    costOfRent,
+    annualSoli,
+    annualTotal,
+    marginal,
+    effective,
+    p1,
+    p2,
+    withheld,
+    balance,
+    combined,
+    cap,
+    grandTotal,
+    freelance,
+    freelanceTax,
+    denkmalAfA,
   }
 }
