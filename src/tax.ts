@@ -16,6 +16,9 @@ export interface HouseholdInput {
 export interface PersonResult {
   g: number; cls: TaxClass; ls: number; slz: number
   svA: number; netA: number; withheld: number
+  rvAlv: number // pension + unemployment (employee share)
+  kv: number    // statutory health insurance (employee share)
+  pv: number    // statutory care insurance (employee share)
 }
 export interface CapitalIncomeResult {
   interest: number; taxable: number; abgGross: number; auWHT: number
@@ -178,13 +181,17 @@ export function calculate(input: HouseholdInput): TaxResult {
   const marginal = combined > 0 ? (splittingTax(combined + 100, year) - splittingTax(combined, year)) / 100 : 0
   const effective = zvE > 0 ? annualTotal / zvE : 0
 
+  const cfg = YEARS[year]
   const person = (g: number, X: number, cls: TaxClass): PersonResult => {
     const ls = lohnsteuer(X, cls, year)
     const kfb = cls === 'III' ? totalKFB : cls === 'V' ? 0 : totalKFB / 2
     const slz = Math.round(soli(lohnsteuer(Math.max(0, X - kfb), cls, year), cls, year))
-    const svA = sv(g, zus, kids, year)
+    const rvAlv = (RV + ALV) * Math.min(g, cfg.bbgRV)
+    const kv = kvRate(zus) * Math.min(g, cfg.bbgKV)
+    const pv = pvRate(kids, year) * Math.min(g, cfg.bbgKV)
+    const svA = rvAlv + kv + pv
     const netA = g - svA - ls - slz
-    return { g, cls, ls, slz, svA, netA, withheld: ls + slz }
+    return { g, cls, ls, slz, svA, netA, withheld: ls + slz, rvAlv, kv, pv }
   }
   const p1 = person(g1, X1, c1), p2 = person(g2, X2, c2)
 

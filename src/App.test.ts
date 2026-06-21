@@ -65,6 +65,17 @@ describe('App.svelte', () => {
     expect(document.cookie).toMatch(/gtc_form=/)
   })
 
+  it('breaks out health insurance and shows net income', () => {
+    render(App)
+    // health + care insurance now have their own lines in the take-home table
+    expect(screen.getByText(/Health insurance \(KV\)/i)).toBeTruthy()
+    expect(screen.getByText(/Care insurance \(PV\)/i)).toBeTruthy()
+    // the combined monthly net income is surfaced
+    expect(screen.getByText(/Combined net income \/ month/i)).toBeTruthy()
+    const expected = eur((calculate(DEFAULTS).p1.netA + calculate(DEFAULTS).p2.netA) / 12)
+    expect(screen.getAllByText(expected).length).toBeGreaterThan(0)
+  })
+
   it('recalculates when the tax year changes', async () => {
     const { container } = render(App)
     const select = container.querySelector<HTMLSelectElement>('select#year')!

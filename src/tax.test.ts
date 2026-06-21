@@ -94,4 +94,19 @@ describe('calculate() integration', () => {
   it('the same household owes less tax in 2026 than 2023', () =>
     expect(calculate(H({ year: 2026, grossYou: 80000, grossWife: 40000 })).annualTotal)
       .toBeLessThan(calculate(H({ year: 2023, grossYou: 80000, grossWife: 40000 })).annualTotal))
+
+  it('exposes the social-security breakout that sums to the total (health + care + pension)', () => {
+    const p = calculate(H({ grossYou: 70000, grossWife: 0 })).p1
+    expect(p.kv).toBeGreaterThan(0)
+    expect(p.pv).toBeGreaterThan(0)
+    expect(p.rvAlv).toBeGreaterThan(0)
+    expect(near(p.rvAlv + p.kv + p.pv, p.svA, 0.01)).toBe(true)
+  })
+
+  it('a higher Zusatzbeitrag raises health insurance and lowers net pay', () => {
+    const lo = calculate(H({ grossYou: 60000, zusatzPct: 0.9 })).p1
+    const hi = calculate(H({ grossYou: 60000, zusatzPct: 2.5 })).p1
+    expect(hi.kv).toBeGreaterThan(lo.kv)
+    expect(hi.netA).toBeLessThan(lo.netA)
+  })
 })
