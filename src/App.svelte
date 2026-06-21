@@ -1106,7 +1106,22 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--grid-gap);
-    align-items: start;
+    align-items: stretch;
+  }
+  /* Cards in the same row stretch to equal height; their inner notes/callouts
+     sink to the bottom so card footers line up instead of leaving grey gaps. */
+  .grid .card.flush {
+    display: flex;
+    flex-direction: column;
+  }
+  .grid .card.flush .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .grid .card.flush .card-body .note,
+  .grid .card.flush .card-body .callout {
+    margin-top: auto;
   }
   .big {
     font-size: var(--big-size);
